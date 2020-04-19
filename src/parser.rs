@@ -1,3 +1,7 @@
+#![allow(unused_variables, dead_code)]
+
+use crate::RobotsParseHandler;
+
 #[derive(Eq, PartialEq)]
 pub enum ParseKeyType {
     /// Generic highlevel fields.
@@ -75,5 +79,36 @@ impl ParsedRobotsKey {
             || (typo_targets.is_some()
                 && self.allow_typo
                 && typo_targets.unwrap().iter().any(check))
+    }
+}
+
+struct RobotsTxtParser<'a, Handler: RobotsParseHandler> {
+    robots_body: &'a str,
+    handler: &'a mut Handler,
+}
+
+impl<'a, Handler: RobotsParseHandler> RobotsTxtParser<'a, Handler> {
+    pub fn new(robots_body: &'a str, handler: &'a mut Handler) -> Self {
+        RobotsTxtParser {
+            robots_body,
+            handler,
+        }
+    }
+
+    pub fn parse(&mut self) {
+        self.handler.handle_robots_start();
+
+        self.handler.handle_robots_end();
+    }
+
+    pub fn get_key_and_value_from() -> bool {
+        false
+    }
+
+    pub fn need_escape_value_for_key(key: &ParsedRobotsKey) -> bool {
+        match key.get_type() {
+            ParseKeyType::UserAgent | ParseKeyType::Sitemap => false,
+            _ => true,
+        }
     }
 }
