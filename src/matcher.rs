@@ -165,8 +165,35 @@ impl<S: RobotsMatchStrategy> RobotsMatcher<S> {
 
     /// Returns true if 'url' is allowed to be fetched by any member of the
     /// "user_agents" vector. 'url' must be %-encoded according to RFC3986.
-    fn allowed_by_robots(&self, robots_body: &str, user_agents: Vec<String>, url: &str) -> bool {
-        false
+    pub fn allowed_by_robots(
+        &mut self,
+        robots_body: &str,
+        user_agents: Vec<String>,
+        url: &str,
+    ) -> bool
+    where
+        Self: RobotsParseHandler,
+    {
+        // The url is not normalized (escaped, percent encoded) here because the user
+        // is asked to provide it in escaped form already.
+        let path = super::get_path_params_query(url);
+        self.init_user_agents_and_path(user_agents, path.to_string());
+        super::parse_robotstxt(robots_body, self);
+        !self.disallow()
+    }
+
+    /// Do robots check for 'url' when there is only one user agent. 'url' must
+    /// be %-encoded according to RFC3986.
+    pub fn one_agent_allowed_by_robots(
+        &mut self,
+        robots_txt: &str,
+        user_agent: &str,
+        url: &str,
+    ) -> bool
+    where
+        Self: RobotsParseHandler,
+    {
+        self.allowed_by_robots(robots_txt, vec![user_agent.to_string()], url)
     }
 
     /// Returns true if we are disallowed from crawling a matching URI.
@@ -205,7 +232,7 @@ impl<S: RobotsMatchStrategy> RobotsMatcher<S> {
     }
 }
 
-impl<S: RobotsMatchStrategy> RobotsParseHandler for RobotsMatcher<S> {
+impl<S: RobotsMatchStrategy> RobotsParseHandler for &mut RobotsMatcher<S> {
     fn handle_robots_start(&mut self) {
         // This is a new robots.txt file, so we need to reset all the instance member
         // variables. We do it in the same order the instance member variables are
@@ -222,8 +249,28 @@ impl<S: RobotsMatchStrategy> RobotsParseHandler for RobotsMatcher<S> {
 
     fn handle_robots_end(&mut self) {}
 
-    fn handle_user_agent(&mut self, line_num: u32, value: &str) {
-        unimplemented!()
+    fn handle_user_agent(&mut self, line_num: u32, user_agent: &str) {
+        if self.seen_separator {
+            self.seen_specific_agent = false;
+            self.seen_global_agent = false;
+            self.seen_separator = false;
+        }
+
+        // Google-specific optimization: a '*' followed by space and more characters
+        // in a user-agent record is still regarded a global rule.
+        let p = user_agent.get(..1).unwrap();
+        if user_agent.len() >= 1 && p == "*" && (user_agent.len() == 1 || p.is_empty()) {
+            self.seen_global_agent = true;
+        } else {
+            let user_agent = RobotsMatcher::<S>::extract_user_agent(user_agent);
+            for agent in &self.user_agents {
+                if user_agent.eq_ignore_ascii_case(&agent) {
+                    self.ever_seen_specific_agent = true;
+                    self.seen_specific_agent = true;
+                    break;
+                }
+            }
+        }
     }
 
     fn handle_allow(&mut self, line_num: u32, value: &str) {

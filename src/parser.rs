@@ -38,7 +38,7 @@ pub enum ParseKeyType {
 /// and represent them as an enumeration which allows for faster processing
 /// afterwards.
 /// For unparsable keys, the original string representation is kept.
-struct ParsedRobotsKey {
+pub struct ParsedRobotsKey {
     type_: ParseKeyType,
     key_text: String,
     /// Allow for typos such as DISALOW in robots.txt.
@@ -98,7 +98,7 @@ impl ParsedRobotsKey {
     }
 }
 
-struct RobotsTxtParser<'a, Handler: RobotsParseHandler> {
+pub struct RobotsTxtParser<'a, Handler: RobotsParseHandler> {
     robots_body: &'a str,
     handler: &'a mut Handler,
 }

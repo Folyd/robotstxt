@@ -16,6 +16,8 @@
 
 #![allow(unused_variables)]
 
+use parser::RobotsTxtParser;
+
 mod matcher;
 mod parser;
 
@@ -23,10 +25,29 @@ mod parser;
 pub trait RobotsParseHandler {
     fn handle_robots_start(&mut self);
     fn handle_robots_end(&mut self);
-    fn handle_user_agent(&mut self, line_num: u32, value: &str);
+    fn handle_user_agent(&mut self, line_num: u32, user_agent: &str);
     fn handle_allow(&mut self, line_num: u32, value: &str);
     fn handle_disallow(&mut self, line_num: u32, value: &str);
     fn handle_sitemap(&mut self, line_num: u32, value: &str);
     /// Any other unrecognized name/value pairs.
     fn handle_unknown_action(&mut self, line_num: u32, action: &str, value: &str);
+}
+
+/// get_path_params_query is not in anonymous namespace to allow testing.
+///
+/// Extracts path (with params) and query part from URL. Removes scheme,
+/// authority, and fragment. Result always starts with "/".
+/// Returns "/" if the url doesn't have a path or is not valid.
+pub fn get_path_params_query(url: &str) -> &str {
+    "/"
+}
+
+/// Parses body of a robots.txt and emits parse callbacks. This will accept
+/// typical typos found in robots.txt, such as 'disalow'.
+///
+/// Note, this function will accept all kind of input but will skip
+/// everything that does not look like a robots directive.
+pub fn parse_robotstxt(robots_body: &str, parse_callback: &mut impl RobotsParseHandler) {
+    let mut parser = RobotsTxtParser::new(robots_body, parse_callback);
+    parser.parse();
 }
