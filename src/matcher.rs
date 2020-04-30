@@ -177,7 +177,7 @@ impl<S: RobotsMatchStrategy> RobotsMatcher<S> {
         // The url is not normalized (escaped, percent encoded) here because the user
         // is asked to provide it in escaped form already.
         let path = super::get_path_params_query(url);
-        self.init_user_agents_and_path(user_agents, path.to_string());
+        self.init_user_agents_and_path(user_agents, path);
         super::parse_robotstxt(robots_body, self);
         !self.disallow()
     }

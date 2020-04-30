@@ -16,10 +16,12 @@
 
 #![allow(unused_variables)]
 
+use url::Url;
+
 use parser::RobotsTxtParser;
 
-mod matcher;
-mod parser;
+pub mod matcher;
+pub mod parser;
 
 /// Handler for directives found in robots.txt.
 pub trait RobotsParseHandler {
@@ -38,8 +40,8 @@ pub trait RobotsParseHandler {
 /// Extracts path (with params) and query part from URL. Removes scheme,
 /// authority, and fragment. Result always starts with "/".
 /// Returns "/" if the url doesn't have a path or is not valid.
-pub fn get_path_params_query(url: &str) -> &str {
-    "/"
+pub fn get_path_params_query(url: &str) -> String {
+    Url::parse(url).map_or("/".into(), |url| url.path().to_string())
 }
 
 /// Parses body of a robots.txt and emits parse callbacks. This will accept

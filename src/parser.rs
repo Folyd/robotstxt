@@ -117,8 +117,12 @@ impl<'a, Handler: RobotsParseHandler> RobotsTxtParser<'a, Handler> {
         self.handler.handle_robots_end();
     }
 
-    pub fn get_key_and_value_from() -> bool {
-        false
+    /// Attempts to parse a line of robots.txt into a key/value pair.
+    ///
+    /// On success, the parsed key and value, and true, are returned. If parsing is
+    /// unsuccessful, parseKeyAndValue returns two empty strings and false.
+    pub fn parse_key_value(line: &str) -> (&str, &str, bool) {
+        ("", "", false)
     }
 
     pub fn need_escape_value_for_key(key: &ParsedRobotsKey) -> bool {
@@ -127,4 +131,44 @@ impl<'a, Handler: RobotsParseHandler> RobotsTxtParser<'a, Handler> {
             _ => true,
         }
     }
+
+    fn parse_and_emit_line(&mut self, current_line: u32, line: &str) {
+        match Self::parse_key_value(line) {
+            (_, _, false) => return,
+            (string_key, mut value, true) => {
+                let mut key = ParsedRobotsKey::default();
+                key.parse(string_key);
+                if Self::need_escape_value_for_key(&key) {
+                    value = escape_pattern(value);
+                }
+                self.emit(current_line, &key, value);
+            }
+        }
+    }
+
+    fn emit(&mut self, line: u32, key: &ParsedRobotsKey, value: &str) {
+        match key.get_type() {
+            ParseKeyType::UserAgent => self.handler.handle_user_agent(line, value),
+            ParseKeyType::Sitemap => self.handler.handle_sitemap(line, value),
+            ParseKeyType::Allow => self.handler.handle_allow(line, value),
+            ParseKeyType::Disallow => self.handler.handle_disallow(line, value),
+            ParseKeyType::Unknown => {
+                self.handler
+                    .handle_unknown_action(line, &key.get_unknown_text(), value)
+            }
+        }
+    }
+}
+
+/// escape_pattern is used to canonicalize the allowed/disallowed path patterns.
+/// UTF-8 multibyte sequences (and other out-of-range ASCII values) are percent-encoded,
+/// and any existing percent-encoded values have their hex values normalised to uppercase.
+///
+/// For example:
+///     /SanJoséSellers ==> /Sanjos%C3%A9Sellers
+///     %aa ==> %AA
+/// If the given path pattern is already adequately escaped,
+/// the original string is returned unchanged.
+fn escape_pattern(path: &str) -> &str {
+    ""
 }
