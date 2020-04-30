@@ -212,7 +212,7 @@ impl<S: RobotsMatchStrategy> RobotsMatcher<S> {
             return self.disallow.global.priority() > self.allow.global.priority();
         }
 
-        return false;
+        false
     }
 
     /// Returns true if any user-agent was seen.
@@ -228,7 +228,7 @@ impl<S: RobotsMatchStrategy> RobotsMatcher<S> {
     /// robots.txt. Valid user agent strings only contain the characters
     /// [a-zA-Z_-].
     fn is_valid_user_agent_to_obey(user_agent: &str) -> bool {
-        user_agent.len() > 0 && Self::extract_user_agent(user_agent) == user_agent
+        !user_agent.is_empty() && Self::extract_user_agent(user_agent) == user_agent
     }
 }
 
@@ -259,7 +259,7 @@ impl<S: RobotsMatchStrategy> RobotsParseHandler for &mut RobotsMatcher<S> {
         // Google-specific optimization: a '*' followed by space and more characters
         // in a user-agent record is still regarded a global rule.
         let p = user_agent.get(..1).unwrap();
-        if user_agent.len() >= 1 && p == "*" && (user_agent.len() == 1 || p.is_empty()) {
+        if !user_agent.is_empty() && p == "*" && (user_agent.len() == 1 || p.is_empty()) {
             self.seen_global_agent = true;
         } else {
             let user_agent = RobotsMatcher::<S>::extract_user_agent(user_agent);

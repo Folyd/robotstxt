@@ -134,7 +134,7 @@ impl<'a, Handler: RobotsParseHandler> RobotsTxtParser<'a, Handler> {
 
     fn parse_and_emit_line(&mut self, current_line: u32, line: &str) {
         match Self::parse_key_value(line) {
-            (_, _, false) => return,
+            (_, _, false) => {}
             (string_key, mut value, true) => {
                 let mut key = ParsedRobotsKey::default();
                 key.parse(string_key);
