@@ -220,8 +220,18 @@ impl<S: RobotsMatchStrategy> RobotsMatcher<S> {
         self.seen_global_agent || self.seen_specific_agent
     }
 
+    /// Extract the matchable part of a user agent string, essentially stopping at
+    /// the first invalid character.
+    /// Example: 'Googlebot/2.1' becomes 'Googlebot'
     fn extract_user_agent(user_agent: &str) -> &str {
-        ""
+        // Allowed characters in user-agent are [a-zA-Z_-].
+        if let Some(end) =
+            user_agent.find(|c: char| !(c.is_ascii_alphabetic() || c == '-' || c == '_'))
+        {
+            &user_agent[..end]
+        } else {
+            user_agent
+        }
     }
 
     /// Verifies that the given user agent is valid to be matched against
@@ -321,5 +331,23 @@ impl<S: RobotsMatchStrategy> RobotsParseHandler for &mut RobotsMatcher<S> {
 
     fn handle_unknown_action(&mut self, line_num: u32, action: &str, value: &str) {
         self.seen_separator = true;
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::matcher::*;
+
+    #[test]
+    fn test_extract_user_agent() {
+        // Example: 'Googlebot/2.1' becomes 'Googlebot'
+        type Target = RobotsMatcher<LongestMatchRobotsMatchStrategy>;
+        assert_eq!("Googlebot", Target::extract_user_agent("Googlebot/2.1"));
+        assert_eq!("Googlebot", Target::extract_user_agent("Googlebot"));
+        assert_eq!("Googlebot-", Target::extract_user_agent("Googlebot-"));
+        assert_eq!("Googlebot_", Target::extract_user_agent("Googlebot_"));
+        assert_eq!("Googlebot_", Target::extract_user_agent("Googlebot_2.1"));
+        assert_eq!("", Target::extract_user_agent("1Googlebot_2.1"));
+        assert_eq!("Goo", Target::extract_user_agent("Goo1glebot_2.1"));
     }
 }
