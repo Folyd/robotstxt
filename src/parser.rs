@@ -122,7 +122,50 @@ impl<'a, Handler: RobotsParseHandler> RobotsTxtParser<'a, Handler> {
     /// On success, the parsed key and value, and true, are returned. If parsing is
     /// unsuccessful, parseKeyAndValue returns two empty strings and false.
     pub fn parse_key_value(line: &str) -> (&str, &str, bool) {
-        ("", "", false)
+        let mut line = line;
+        // Remove comments from the current robots.txt line.
+        if let Some(comment) = line.find('#') {
+            line = &line[..comment].trim();
+        }
+
+        // Rules must match the following pattern:
+        //   <key>[ \t]*:[ \t]*<value>
+        let mut sep = line.find(':');
+        if sep.is_none() {
+            // Google-specific optimization: some people forget the colon, so we need to
+            // accept whitespace in its stead.
+            let white = " \t";
+
+            sep = line.find(|c| white.contains(c));
+            if let Some(sep) = sep {
+                let val = &line[sep..].trim();
+                // since we dropped trailing whitespace above.
+                assert!(val.len() > 0);
+
+                if val.find(|c| white.contains(c)).is_some() {
+                    // We only accept whitespace as a separator if there are exactly two
+                    // sequences of non-whitespace characters.  If we get here, there were
+                    // more than 2 such sequences since we stripped trailing whitespace
+                    // above.
+                    return ("", "", false);
+                }
+            }
+        }
+
+        if let Some(sep) = sep {
+            // Key starts at beginning of line.
+            let key = &line[..sep];
+            if key.len() == 0 {
+                return ("", "", false);
+            }
+
+            // Value starts after the separator.
+            let value = &line[(sep + 1)..];
+            (key.trim(), value.trim(), true)
+        } else {
+            // Couldn't find a separator.
+            ("", "", false)
+        }
     }
 
     pub fn need_escape_value_for_key(key: &ParsedRobotsKey) -> bool {
@@ -171,4 +214,65 @@ impl<'a, Handler: RobotsParseHandler> RobotsTxtParser<'a, Handler> {
 /// the original string is returned unchanged.
 fn escape_pattern(path: &str) -> &str {
     ""
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::parser::*;
+    use crate::RobotsParseHandler;
+
+    struct FooHandler;
+
+    impl RobotsParseHandler for FooHandler {
+        fn handle_robots_start(&mut self) {
+            unimplemented!()
+        }
+
+        fn handle_robots_end(&mut self) {
+            unimplemented!()
+        }
+
+        fn handle_user_agent(&mut self, line_num: u32, user_agent: &str) {
+            unimplemented!()
+        }
+
+        fn handle_allow(&mut self, line_num: u32, value: &str) {
+            unimplemented!()
+        }
+
+        fn handle_disallow(&mut self, line_num: u32, value: &str) {
+            unimplemented!()
+        }
+
+        fn handle_sitemap(&mut self, line_num: u32, value: &str) {
+            unimplemented!()
+        }
+
+        fn handle_unknown_action(&mut self, line_num: u32, action: &str, value: &str) {
+            unimplemented!()
+        }
+    }
+
+    #[test]
+    fn test_parse_key_value<'a>() {
+        type Target<'a> = RobotsTxtParser<'a, FooHandler>;
+        let negative = ("", "", false);
+        let positive = ("User-agent", "Googlebot", true);
+
+        assert_eq!(negative, Target::parse_key_value("# "));
+        assert_eq!(negative, Target::parse_key_value("# User-agent: Googlebot"));
+
+        assert_eq!(positive, Target::parse_key_value("User-agent: Googlebot"));
+        assert_eq!(positive, Target::parse_key_value("User-agent  Googlebot"));
+        assert_eq!(positive, Target::parse_key_value("User-agent \t Googlebot"));
+        assert_eq!(positive, Target::parse_key_value("User-agent\tGooglebot"));
+        assert_eq!(
+            positive,
+            Target::parse_key_value("User-agent: Googlebot # 123")
+        );
+        assert_eq!(
+            positive,
+            Target::parse_key_value("User-agent\tGooglebot # 123")
+        );
+    }
 }
