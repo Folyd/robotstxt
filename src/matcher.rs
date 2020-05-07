@@ -301,7 +301,15 @@ impl<S: RobotsMatchStrategy> RobotsParseHandler for &mut RobotsMatcher<S> {
                 }
             }
         } else {
-            // TODO
+            // Google-specific optimization: 'index.htm' and 'index.html' are normalized to '/'.
+            let slash_pos = value.rfind('/');
+
+            if let Some(slash_pos) = slash_pos {
+                if value[slash_pos..].starts_with("/index.htm") {
+                    let new_pattern = format!("{}{}", &value[..(slash_pos + 1)], "$");
+                    self.handle_allow(line_num, &new_pattern);
+                }
+            }
         }
     }
 
