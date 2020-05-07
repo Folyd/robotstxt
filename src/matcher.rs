@@ -107,6 +107,46 @@ trait RobotsMatchStrategy {
     /// Since 'path' and 'pattern' are both externally determined (by the webmaster),
     /// we make sure to have acceptable worst-case performance.
     fn matches(path: &str, pattern: &str) -> bool {
+        let pathlen = path.len();
+        let path_chars = path.chars();
+        let mut pos = Vec::with_capacity(pathlen + 1);
+
+        // The pos[] array holds a sorted list of indexes of 'path', with length
+        // 'numpos'.  At the start and end of each iteration of the main loop below,
+        // the pos[] array will hold a list of the prefixes of the 'path' which can
+        // match the current prefix of 'pattern'. If this list is ever empty,
+        // return false. If we reach the end of 'pattern' with at least one element
+        // in pos[], return true.
+        let mut numpos: usize = 1;
+        pos.insert(0, 0);
+
+        for (index, pat) in pattern.chars().enumerate() {
+            if pat == '$' && index + 1 == pattern.len() {
+                return pos[numpos - 1] == pathlen;
+            }
+
+            if pat == '*' {
+                numpos = pathlen - pos[0] + 1;
+                for i in 1..numpos {
+                    pos.insert(i, pos[i - 1] + 1);
+                }
+            } else {
+                // Includes '$' when not at end of pattern.
+                let mut new_numpos = 0;
+                for i in 0..numpos {
+                    // TODO Optimize chars().nth() ?
+                    if pos[i] < pathlen && path.chars().nth(pos[i]) == Some(pat) {
+                        pos.insert(new_numpos, pos[i] + 1);
+                        new_numpos += 1;
+                    }
+                }
+                numpos = new_numpos;
+
+                if numpos == 0 {
+                    return false;
+                }
+            }
+        }
         true
     }
 }
