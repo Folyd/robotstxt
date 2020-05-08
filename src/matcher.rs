@@ -280,6 +280,25 @@ impl<S: RobotsMatchStrategy> RobotsMatcher<S> {
     fn is_valid_user_agent_to_obey(user_agent: &str) -> bool {
         !user_agent.is_empty() && Self::extract_user_agent(user_agent) == user_agent
     }
+
+    /// Returns true if we are disallowed from crawling a matching URI. Ignores any
+    /// rules specified for the default user agent, and bases its results only on
+    /// the specified user agents.
+    fn disallow_ignore_global(&self) -> bool {
+        if self.allow.specific.priority() > 0 || self.disallow.specific.priority() > 0 {
+            return self.disallow.specific.priority() > self.allow.specific.priority();
+        }
+        false
+    }
+
+    /// Returns the line that matched or 0 if none matched.
+    fn matching_line(&self) -> u32 {
+        if self.ever_seen_specific_agent {
+            return Match::higher_priority_match(&self.disallow.specific, &self.allow.specific)
+                .line();
+        }
+        return Match::higher_priority_match(&self.disallow.global, &self.allow.global).line();
+    }
 }
 
 impl<S: RobotsMatchStrategy> RobotsParseHandler for &mut RobotsMatcher<S> {
