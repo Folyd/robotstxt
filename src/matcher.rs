@@ -398,4 +398,36 @@ mod test {
         assert_eq!("", Target::extract_user_agent("1Googlebot_2.1"));
         assert_eq!("Goo", Target::extract_user_agent("Goo1glebot_2.1"));
     }
+
+    #[test]
+    fn test_matches() {
+        type Target = LongestMatchRobotsMatchStrategy;
+
+        assert_eq!(true, Target::matches("/", "/"));
+        assert_eq!(true, Target::matches("/abc", "/"));
+        assert_eq!(false, Target::matches("/", "/abc"));
+        assert_eq!(
+            true,
+            Target::matches("/google/robotstxt/tree/master", "/*/*/tree/master")
+        );
+        assert_eq!(
+            true,
+            Target::matches(
+                "/google/robotstxt/tree/master/index.html",
+                "/*/*/tree/master",
+            )
+        );
+        assert_eq!(
+            true,
+            Target::matches("/google/robotstxt/tree/master", "/*/*/tree/master$")
+        );
+        assert_eq!(
+            false,
+            Target::matches("/google/robotstxt/tree/master/abc", "/*/*/tree/master$")
+        );
+        assert_eq!(
+            false,
+            Target::matches("/google/robotstxt/tree/abc", "/*/*/tree/master")
+        );
+    }
 }
