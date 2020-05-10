@@ -218,22 +218,24 @@ const HEX_DIGITS: [char; 16] = [
 ///     %aa ==> %AA
 /// If the given path pattern is already adequately escaped,
 /// the original string is returned unchanged.
+/// ```rust
+/// use robotstxt::parser::escape_pattern;
+/// assert_eq!("%AA", &escape_pattern("%aa"));
+/// ```
 pub fn escape_pattern(path: &str) -> String {
     let mut num_to_escape = 0;
     let mut need_capitalize = false;
 
     // First, scan the buffer to see if changes are needed. Most don't.
-    let mut i = 0;
     let mut chars = path.chars();
     loop {
-        match chars.nth(i) {
+        match chars.nth(0) {
             // (a) % escape sequence.
-            Some(c) if c == '%' => match (chars.nth(i + 1), chars.nth(i + 2)) {
-                (Some(c1), Some(c2)) if c1.is_digit(16) && c2.is_digit(16) => {
+            Some(c) if c == '%' => match (chars.nth(0), chars.nth(0)) {
+                (Some(c1), Some(c2)) if dbg!(c1.is_digit(16) && c2.is_digit(16)) => {
                     if c1.is_ascii_lowercase() || c2.is_ascii_lowercase() {
                         need_capitalize = true;
                     }
-                    i += 2;
                 }
                 _ => {}
             },
@@ -248,26 +250,23 @@ pub fn escape_pattern(path: &str) -> String {
                 }
             }
         }
-        i += 1;
     }
     // Return if no changes needed.
     if num_to_escape == 0 && !need_capitalize {
         return path.to_string();
     }
 
-    i = 0;
     let mut dest = String::with_capacity(num_to_escape * 2 + path.len() + 1);
     chars = path.chars();
     loop {
-        match chars.nth(i) {
+        match chars.nth(0) {
             Some(c) if c == '%' => {
                 // (a) Normalize %-escaped sequence (eg. %2f -> %2F).
-                match (chars.nth(i + 1), chars.nth(i + 2)) {
+                match (chars.nth(0), chars.nth(0)) {
                     (Some(c1), Some(c2)) if c1.is_digit(16) && c2.is_digit(16) => {
                         dest.push(c);
                         dest.push(c1.to_ascii_uppercase());
                         dest.push(c2.to_ascii_uppercase());
-                        i += 2;
                     }
                     _ => {}
                 }
@@ -286,7 +285,6 @@ pub fn escape_pattern(path: &str) -> String {
                 break;
             }
         }
-        i += 1;
     }
     dest
 }
@@ -349,5 +347,11 @@ mod tests {
             positive,
             Target::parse_key_value("User-agent\tGooglebot # 123")
         );
+    }
+
+    #[test]
+    fn test_escape_pattern() {
+        assert_eq!("%AA", &escape_pattern("%aa"));
+        assert_eq!("/SanJos%E9Sellers", &escape_pattern("/SanJoséSellers"));
     }
 }
