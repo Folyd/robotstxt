@@ -178,13 +178,15 @@ impl<'a, Handler: RobotsParseHandler> RobotsTxtParser<'a, Handler> {
     fn parse_and_emit_line(&mut self, current_line: u32, line: &str) {
         match Self::parse_key_value(line) {
             (_, _, false) => {}
-            (string_key, mut value, true) => {
+            (string_key, value, true) => {
                 let mut key = ParsedRobotsKey::default();
                 key.parse(string_key);
                 if Self::need_escape_value_for_key(&key) {
-                    value = escape_pattern(value);
+                    let value = escape_pattern(value);
+                    self.emit(current_line, &key, &value);
+                } else {
+                    self.emit(current_line, &key, value);
                 }
-                self.emit(current_line, &key, value);
             }
         }
     }
@@ -203,7 +205,11 @@ impl<'a, Handler: RobotsParseHandler> RobotsTxtParser<'a, Handler> {
     }
 }
 
-/// escape_pattern is used to canonicalize the allowed/disallowed path patterns.
+const HEX_DIGITS: [char; 16] = [
+    '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F',
+];
+
+/// Canonicalize the allowed/disallowed path patterns.
 /// UTF-8 multibyte sequences (and other out-of-range ASCII values) are percent-encoded,
 /// and any existing percent-encoded values have their hex values normalised to uppercase.
 ///
@@ -212,8 +218,77 @@ impl<'a, Handler: RobotsParseHandler> RobotsTxtParser<'a, Handler> {
 ///     %aa ==> %AA
 /// If the given path pattern is already adequately escaped,
 /// the original string is returned unchanged.
-fn escape_pattern(path: &str) -> &str {
-    ""
+pub fn escape_pattern(path: &str) -> String {
+    let mut num_to_escape = 0;
+    let mut need_capitalize = false;
+
+    // First, scan the buffer to see if changes are needed. Most don't.
+    let mut i = 0;
+    let mut chars = path.chars();
+    loop {
+        match chars.nth(i) {
+            // (a) % escape sequence.
+            Some(c) if c == '%' => match (chars.nth(i + 1), chars.nth(i + 2)) {
+                (Some(c1), Some(c2)) if c1.is_digit(16) && c2.is_digit(16) => {
+                    if c1.is_ascii_lowercase() || c2.is_ascii_lowercase() {
+                        need_capitalize = true;
+                    }
+                    i += 2;
+                }
+                _ => {}
+            },
+            Some(c) if c as i32 >= 0x80 => {
+                // (b) needs escaping.
+                num_to_escape += 1;
+            }
+            o => {
+                // (c) Already escaped and escape-characters normalized (eg. %2f -> %2F).
+                if o.is_none() {
+                    break;
+                }
+            }
+        }
+        i += 1;
+    }
+    // Return if no changes needed.
+    if num_to_escape == 0 && !need_capitalize {
+        return path.to_string();
+    }
+
+    i = 0;
+    let mut dest = String::with_capacity(num_to_escape * 2 + path.len() + 1);
+    chars = path.chars();
+    loop {
+        match chars.nth(i) {
+            Some(c) if c == '%' => {
+                // (a) Normalize %-escaped sequence (eg. %2f -> %2F).
+                match (chars.nth(i + 1), chars.nth(i + 2)) {
+                    (Some(c1), Some(c2)) if c1.is_digit(16) && c2.is_digit(16) => {
+                        dest.push(c);
+                        dest.push(c1.to_ascii_uppercase());
+                        dest.push(c2.to_ascii_uppercase());
+                        i += 2;
+                    }
+                    _ => {}
+                }
+            }
+            Some(c) if c as i32 >= 0x80 => {
+                // (b) %-escape octets whose highest bit is set. These are outside the ASCII range.
+                dest.push('%');
+                dest.push(HEX_DIGITS[(c as usize >> 4) & 0xf]);
+                dest.push(HEX_DIGITS[c as usize & 0xf]);
+            }
+            Some(c) => {
+                // (c) Normal character, no modification needed.
+                dest.push(c);
+            }
+            None => {
+                break;
+            }
+        }
+        i += 1;
+    }
+    dest
 }
 
 #[cfg(test)]
