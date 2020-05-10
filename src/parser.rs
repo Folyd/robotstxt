@@ -218,28 +218,29 @@ const HEX_DIGITS: [char; 16] = [
 ///     %aa ==> %AA
 /// If the given path pattern is already adequately escaped,
 /// the original string is returned unchanged.
-/// ```rust
-/// use robotstxt::parser::escape_pattern;
-/// assert_eq!("%AA", &escape_pattern("%aa"));
-/// ```
 pub fn escape_pattern(path: &str) -> String {
     let mut num_to_escape = 0;
     let mut need_capitalize = false;
 
     // First, scan the buffer to see if changes are needed. Most don't.
-    let mut chars = path.chars();
+    let mut chars = path.bytes();
     loop {
         match chars.nth(0) {
             // (a) % escape sequence.
-            Some(c) if c == '%' => match (chars.nth(0), chars.nth(0)) {
-                (Some(c1), Some(c2)) if dbg!(c1.is_digit(16) && c2.is_digit(16)) => {
-                    if c1.is_ascii_lowercase() || c2.is_ascii_lowercase() {
-                        need_capitalize = true;
+            Some(c) if c as char == '%' => {
+                match (
+                    chars.nth(0).map(|c| c as char),
+                    chars.nth(0).map(|c| c as char),
+                ) {
+                    (Some(c1), Some(c2)) if c1.is_digit(16) && c2.is_digit(16) => {
+                        if c1.is_ascii_lowercase() || c2.is_ascii_lowercase() {
+                            need_capitalize = true;
+                        }
                     }
+                    _ => {}
                 }
-                _ => {}
-            },
-            Some(c) if c as i32 >= 0x80 => {
+            }
+            Some(c) if c >= 0x80 => {
                 // (b) needs escaping.
                 num_to_escape += 1;
             }
@@ -257,21 +258,24 @@ pub fn escape_pattern(path: &str) -> String {
     }
 
     let mut dest = String::with_capacity(num_to_escape * 2 + path.len() + 1);
-    chars = path.chars();
+    chars = path.bytes();
     loop {
         match chars.nth(0) {
-            Some(c) if c == '%' => {
+            Some(c) if c as char == '%' => {
                 // (a) Normalize %-escaped sequence (eg. %2f -> %2F).
-                match (chars.nth(0), chars.nth(0)) {
+                match (
+                    chars.nth(0).map(|c| c as char),
+                    chars.nth(0).map(|c| c as char),
+                ) {
                     (Some(c1), Some(c2)) if c1.is_digit(16) && c2.is_digit(16) => {
-                        dest.push(c);
+                        dest.push(c as char);
                         dest.push(c1.to_ascii_uppercase());
                         dest.push(c2.to_ascii_uppercase());
                     }
                     _ => {}
                 }
             }
-            Some(c) if c as i32 >= 0x80 => {
+            Some(c) if c >= 0x80 => {
                 // (b) %-escape octets whose highest bit is set. These are outside the ASCII range.
                 dest.push('%');
                 dest.push(HEX_DIGITS[(c as usize >> 4) & 0xf]);
@@ -279,7 +283,7 @@ pub fn escape_pattern(path: &str) -> String {
             }
             Some(c) => {
                 // (c) Normal character, no modification needed.
-                dest.push(c);
+                dest.push(c as char);
             }
             None => {
                 break;
@@ -351,7 +355,14 @@ mod tests {
 
     #[test]
     fn test_escape_pattern() {
+        assert_eq!(
+            "http://www.example.com",
+            &escape_pattern("http://www.example.com")
+        );
+        assert_eq!("/a/b/c", &escape_pattern("/a/b/c"));
         assert_eq!("%AA", &escape_pattern("%aa"));
-        assert_eq!("/SanJos%E9Sellers", &escape_pattern("/SanJoséSellers"));
+        assert_eq!("%AA", &escape_pattern("%aA"));
+        assert_eq!("/Sanjos%C3%A9Sellers", &escape_pattern("/SanjoséSellers"));
+        assert_eq!("%C3%A1", &escape_pattern("á"));
     }
 }
