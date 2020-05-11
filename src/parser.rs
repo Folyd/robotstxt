@@ -111,9 +111,55 @@ impl<'a, Handler: RobotsParseHandler> RobotsTxtParser<'a, Handler> {
         }
     }
 
+    /// Parse body of this Parser's robots.txt and emit parse callbacks. This will accept
+    /// typical typos found in robots.txt, such as 'disalow'.
+    ///
+    /// Note, this function will accept all kind of input but will skip
+    /// everything that does not look like a robots directive.
     pub fn parse(&mut self) {
+        let utf_bom = [0xEF, 0xBB, 0xBF];
+        // Certain browsers limit the URL length to 2083 bytes. In a robots.txt, it's
+        // fairly safe to assume any valid line isn't going to be more than many times
+        // that max url length of 2KB. We want some padding for
+        // UTF-8 encoding/nulls/etc. but a much smaller bound would be okay as well.
+        // If so, we can ignore the chars on a line past that.
+        let max_line_len = 2083 * 8;
+        let mut line_num = 0;
+        let mut last_was_carriage_return = false;
         self.handler.handle_robots_start();
 
+        let mut start = 0;
+        let mut end = 0;
+        for (index, ch) in self.robots_body.bytes().enumerate() {
+            // Google-specific optimization: UTF-8 byte order marks should never
+            // appear in a robots.txt file, but they do nevertheless. Skipping
+            // possible BOM-prefix in the first bytes of the input.
+            if index < utf_bom.len() && ch == utf_bom[index] {
+                continue;
+            }
+
+            if ch != 0x0A && ch != 0x0D {
+                // Non-line-ending char case.
+                // Put in next spot on current line, as long as there's room.
+                if (end - start) < max_line_len - 1 {
+                    end += 1;
+                }
+            } else {
+                // Line-ending character char case.
+                // Only emit an empty line if this was not due to the second character
+                // of the DOS line-ending \r\n .
+                let is_crlf_continuation = end == start && last_was_carriage_return && ch == 0x0A;
+                if !is_crlf_continuation {
+                    line_num += 1;
+                    self.parse_and_emit_line(line_num, &self.robots_body[start..end]);
+                }
+                start = index;
+                end = index;
+                last_was_carriage_return = ch == 0x0D;
+            }
+        }
+        line_num += 1;
+        self.parse_and_emit_line(line_num, &self.robots_body[start..end]);
         self.handler.handle_robots_end();
     }
 
