@@ -16,6 +16,7 @@
 
 #![allow(unused_variables)]
 
+pub use matcher::RobotsMatcher;
 use parser::RobotsTxtParser;
 
 pub mod matcher;
