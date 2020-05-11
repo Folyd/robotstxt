@@ -108,7 +108,6 @@ trait RobotsMatchStrategy {
     /// we make sure to have acceptable worst-case performance.
     fn matches(path: &str, pattern: &str) -> bool {
         let pathlen = path.len();
-        let path_chars = path.chars();
         let mut pos = Vec::with_capacity(pathlen + 1);
 
         // The pos[] array holds a sorted list of indexes of 'path', with length
