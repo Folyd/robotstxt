@@ -34,10 +34,7 @@ struct Match {
 
 impl Default for Match {
     fn default() -> Self {
-        Match {
-            priority: Self::NO_MATCH_PRIORITY,
-            line: 0,
-        }
+        Match::new(Self::NO_MATCH_PRIORITY, 0)
     }
 }
 
@@ -328,8 +325,10 @@ impl<S: RobotsMatchStrategy> RobotsParseHandler for RobotsMatcher<S> {
 
         // Google-specific optimization: a '*' followed by space and more characters
         // in a user-agent record is still regarded a global rule.
-        let p = user_agent.get(..1).unwrap();
-        if !user_agent.is_empty() && p == "*" && (user_agent.len() == 1 || p.is_empty()) {
+        if user_agent.len() >= 1
+            && user_agent.starts_with('*')
+            && (user_agent.len() == 1 || user_agent[1..].starts_with(char::is_whitespace))
+        {
             self.seen_global_agent = true;
         } else {
             let user_agent = Self::extract_user_agent(user_agent);
