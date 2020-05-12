@@ -96,7 +96,7 @@ impl MatchHierarchy {
 /// methods that return directly if a URL is being allowed according to the
 /// robots.txt and the crawl agent.
 /// The RobotsMatcher can be re-used for URLs/robots.txt but is not thread-safe.
-trait RobotsMatchStrategy {
+pub trait RobotsMatchStrategy {
     fn match_allow(&self, path: &str, pattern: &str) -> i32;
 
     fn match_disallow(&self, path: &str, pattern: &str) -> i32;
@@ -152,7 +152,8 @@ trait RobotsMatchStrategy {
 
 /// Implements the default robots.txt matching strategy. The maximum number of
 /// characters matched by a pattern is returned as its match priority.
-struct LongestMatchRobotsMatchStrategy {}
+#[derive(Default)]
+pub struct LongestMatchRobotsMatchStrategy {}
 
 impl RobotsMatchStrategy for LongestMatchRobotsMatchStrategy {
     fn match_allow(&self, path: &str, pattern: &str) -> i32 {
@@ -172,7 +173,8 @@ impl RobotsMatchStrategy for LongestMatchRobotsMatchStrategy {
     }
 }
 
-struct RobotsMatcher<S: RobotsMatchStrategy> {
+#[derive(Default)]
+pub struct RobotsMatcher<S: RobotsMatchStrategy> {
     /// Characters of 'url' matching Allow.
     allow: MatchHierarchy,
     /// Characters of 'url' matching Disallow.
@@ -300,7 +302,7 @@ impl<S: RobotsMatchStrategy> RobotsMatcher<S> {
     }
 }
 
-impl<S: RobotsMatchStrategy> RobotsParseHandler for &mut RobotsMatcher<S> {
+impl<S: RobotsMatchStrategy> RobotsParseHandler for RobotsMatcher<S> {
     fn handle_robots_start(&mut self) {
         // This is a new robots.txt file, so we need to reset all the instance member
         // variables. We do it in the same order the instance member variables are
@@ -330,7 +332,7 @@ impl<S: RobotsMatchStrategy> RobotsParseHandler for &mut RobotsMatcher<S> {
         if !user_agent.is_empty() && p == "*" && (user_agent.len() == 1 || p.is_empty()) {
             self.seen_global_agent = true;
         } else {
-            let user_agent = RobotsMatcher::<S>::extract_user_agent(user_agent);
+            let user_agent = Self::extract_user_agent(user_agent);
             for agent in &self.user_agents {
                 if user_agent.eq_ignore_ascii_case(&agent) {
                     self.ever_seen_specific_agent = true;
