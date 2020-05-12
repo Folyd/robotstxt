@@ -153,8 +153,8 @@ impl<'a, Handler: RobotsParseHandler> RobotsTxtParser<'a, Handler> {
                     line_num += 1;
                     self.parse_and_emit_line(line_num, &self.robots_body[start..end]);
                 }
-                start = index;
-                end = index;
+                start = index + 1;
+                end = index + 1;
                 last_was_carriage_return = ch == 0x0D;
             }
         }
