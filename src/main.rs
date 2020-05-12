@@ -32,6 +32,7 @@
 use std::env;
 use std::fs;
 
+use robotstxt::matcher::LongestMatchRobotsMatchStrategy;
 use robotstxt::RobotsMatcher;
 
 fn show_help(name: &str) {
@@ -59,10 +60,10 @@ fn main() {
             show_help(&execute);
         }
         (_, Some(filename), Some(user_agent), Some(url)) => {
-            if let Ok(robots_content) = fs::read_to_string(filename) {
-                let user_agents = vec![user_agent];
-                let mut matcher = RobotsMatcher::default();
-                let allowed = matcher.allowed_by_robots(&robots_content, user_agents, &url);
+            if let Ok(robots_content) = fs::read_to_string(filename.clone()) {
+                let user_agents = vec![user_agent.clone()];
+                let mut matcher = RobotsMatcher::<LongestMatchRobotsMatchStrategy>::default();
+                let allowed = matcher.allowed_by_robots(&robots_content, user_agents, &url.clone());
 
                 println!(
                     "user-agent '{}' with URI '{}': {}",
@@ -83,5 +84,6 @@ fn main() {
             eprintln!("Invalid amount of arguments. Showing help.\n");
             show_help(&execute);
         }
+        _ => {}
     }
 }
