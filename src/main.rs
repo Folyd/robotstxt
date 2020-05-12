@@ -53,7 +53,7 @@ fn show_help(name: &str) {
 
 fn main() {
     let mut args = env::args();
-    match (args.nth(0), args.nth(0), args.nth(0), args.nth(0)) {
+    match (args.next(), args.next(), args.next(), args.next()) {
         (Some(execute), Some(filename), ..)
             if &filename == "-h" || &filename == "-help" || &filename == "--help" =>
         {
@@ -77,7 +77,6 @@ fn main() {
                 }
             } else {
                 eprintln!("failed to read file \"{}\"", filename);
-                return;
             }
         }
         (Some(execute), ..) => {

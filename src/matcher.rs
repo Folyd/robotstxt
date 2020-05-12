@@ -298,7 +298,7 @@ impl<S: RobotsMatchStrategy> RobotsMatcher<S> {
             return Match::higher_priority_match(&self.disallow.specific, &self.allow.specific)
                 .line();
         }
-        return Match::higher_priority_match(&self.disallow.global, &self.allow.global).line();
+        Match::higher_priority_match(&self.disallow.global, &self.allow.global).line()
     }
 }
 

@@ -49,11 +49,12 @@ pub fn get_path_params_query(url: &str) -> String {
             .map(|pos| pos + start_position)
     }
 
-    let mut search_start = 0;
     // Initial two slashes are ignored.
-    if url.len() >= 2 && url.get(..2) == Some("//") {
-        search_start = 2;
-    }
+    let search_start = if url.len() >= 2 && url.get(..2) == Some("//") {
+        2
+    } else {
+        0
+    };
     let early_path = find_first_of(url, "/?;", search_start);
     let mut protocol_end = find(url, "://", search_start);
 
@@ -73,11 +74,7 @@ pub fn get_path_params_query(url: &str) -> String {
             return "/".into();
         }
 
-        let path_end = if hash_pos.is_none() {
-            url.len()
-        } else {
-            hash_pos.unwrap()
-        };
+        let path_end = hash_pos.unwrap_or_else(|| url.len());
         if url.get(path_start..=path_start) != Some("/") {
             // Prepend a slash if the result would start e.g. with '?'.
             return format!("/{}", &url[path_start..path_end]);

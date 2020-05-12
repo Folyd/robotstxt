@@ -186,7 +186,7 @@ impl<'a, Handler: RobotsParseHandler> RobotsTxtParser<'a, Handler> {
             if let Some(sep) = sep {
                 let val = &line[sep..].trim();
                 // since we dropped trailing whitespace above.
-                assert!(val.len() > 0);
+                assert!(!val.is_empty());
 
                 if val.find(|c| white.contains(c)).is_some() {
                     // We only accept whitespace as a separator if there are exactly two
@@ -201,7 +201,7 @@ impl<'a, Handler: RobotsParseHandler> RobotsTxtParser<'a, Handler> {
         if let Some(sep) = sep {
             // Key starts at beginning of line.
             let key = &line[..sep];
-            if key.len() == 0 {
+            if key.is_empty() {
                 return ("", "", false);
             }
 
@@ -271,12 +271,12 @@ pub fn escape_pattern(path: &str) -> String {
     // First, scan the buffer to see if changes are needed. Most don't.
     let mut chars = path.bytes();
     loop {
-        match chars.nth(0) {
+        match chars.next() {
             // (a) % escape sequence.
             Some(c) if c as char == '%' => {
                 match (
-                    chars.nth(0).map(|c| c as char),
-                    chars.nth(0).map(|c| c as char),
+                    chars.next().map(|c| c as char),
+                    chars.next().map(|c| c as char),
                 ) {
                     (Some(c1), Some(c2)) if c1.is_digit(16) && c2.is_digit(16) => {
                         if c1.is_ascii_lowercase() || c2.is_ascii_lowercase() {
@@ -306,12 +306,12 @@ pub fn escape_pattern(path: &str) -> String {
     let mut dest = String::with_capacity(num_to_escape * 2 + path.len() + 1);
     chars = path.bytes();
     loop {
-        match chars.nth(0) {
+        match chars.next() {
             Some(c) if c as char == '%' => {
                 // (a) Normalize %-escaped sequence (eg. %2f -> %2F).
                 match (
-                    chars.nth(0).map(|c| c as char),
-                    chars.nth(0).map(|c| c as char),
+                    chars.next().map(|c| c as char),
+                    chars.next().map(|c| c as char),
                 ) {
                     (Some(c1), Some(c2)) if c1.is_digit(16) && c2.is_digit(16) => {
                         dest.push(c as char);
