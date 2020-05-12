@@ -325,7 +325,7 @@ impl<S: RobotsMatchStrategy> RobotsParseHandler for RobotsMatcher<S> {
 
         // Google-specific optimization: a '*' followed by space and more characters
         // in a user-agent record is still regarded a global rule.
-        if user_agent.len() >= 1
+        if !user_agent.is_empty()
             && user_agent.starts_with('*')
             && (user_agent.len() == 1 || user_agent[1..].starts_with(char::is_whitespace))
         {
@@ -354,10 +354,8 @@ impl<S: RobotsMatchStrategy> RobotsParseHandler for RobotsMatcher<S> {
                 if self.allow.specific.priority() < priority {
                     self.allow.specific.set(priority, line_num);
                 }
-            } else {
-                if self.allow.global.priority() < priority {
-                    self.allow.global.set(priority, line_num);
-                }
+            } else if self.allow.global.priority() < priority {
+                self.allow.global.set(priority, line_num);
             }
         } else {
             // Google-specific optimization: 'index.htm' and 'index.html' are normalized to '/'.
@@ -384,10 +382,8 @@ impl<S: RobotsMatchStrategy> RobotsParseHandler for RobotsMatcher<S> {
                 if self.disallow.specific.priority() < priority {
                     self.disallow.specific.set(priority, line_num);
                 }
-            } else {
-                if self.disallow.global.priority() < priority {
-                    self.disallow.global.set(priority, line_num);
-                }
+            } else if self.disallow.global.priority() < priority {
+                self.disallow.global.set(priority, line_num);
             }
         }
     }
