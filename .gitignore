@@ -5,7 +5,7 @@
 **/*.rs.bk
 .idea
 .DS_Store
-
+ffi/target
 
 #Added by cargo
 Cargo.lock

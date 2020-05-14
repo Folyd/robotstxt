@@ -1,0 +1,12 @@
+[package]
+name = "ffi"
+version = "0.1.0"
+authors = ["Folyd <lyshuhow@gmail.com>"]
+edition = "2018"
+
+[lib]
+name = "rust_robostxt"
+crate-type = ["dylib"]
+
+[dependencies]
+robotstxt = { path = ".." }
