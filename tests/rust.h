@@ -14,12 +14,18 @@
 // limitations under the License.
 //
 
-use robotstxt::matcher::LongestMatchRobotsMatchStrategy;
-use robotstxt::RobotsMatcher;
+#ifndef ROBOTSTXT_RUST_H
+#define ROBOTSTXT_RUST_H
 
-#[no_mangle]
-pub extern "C" fn IsUserAgentAllowed(robotstxt: &str, user_agent: &str, url: &str) -> bool {
-    let user_agents = vec![user_agent.to_string()];
-    let mut matcher = RobotsMatcher::<LongestMatchRobotsMatchStrategy>::default();
-    matcher.allowed_by_robots(&robotstxt, user_agents, &url)
+#ifdef __cplusplus
+extern "C"{
+#endif
+
+bool IsUserAgentAllowed(const absl::string_view robotstxt,
+                        const std::string& useragent, const std::string& url) ;
+
+#ifdef __cplusplus
 }
+#endif
+
+#endif //ROBOTSTXT_RUST_H
