@@ -6,6 +6,6 @@
 .idea
 .DS_Store
 tests/target
-
+robotstxt_test
 #Added by cargo
 Cargo.lock

@@ -17,9 +17,6 @@
 #ifndef ROBOTSTXT_RUST_H
 #define ROBOTSTXT_RUST_H
 
-#include <string>
-
-using namespace std;
 #ifdef __cplusplus
 extern "C"{
 #endif
