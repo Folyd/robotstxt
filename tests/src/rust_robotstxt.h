@@ -24,9 +24,7 @@ using namespace std;
 extern "C"{
 #endif
 
-bool IsUserAgentAllowed(const char** &robotstxt,
-                        const char** &useragent, const char** &url);
-void hello();
+bool IsUserAgentAllowed(const char *robotstxt, const char *useragent, const char *url);
 
 #ifdef __cplusplus
 }

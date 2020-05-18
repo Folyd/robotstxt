@@ -13,18 +13,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
+use std::ffi::CStr;
+use std::os::raw::c_char;
 
 use robotstxt::matcher::LongestMatchRobotsMatchStrategy;
 use robotstxt::RobotsMatcher;
 
 #[no_mangle]
-pub extern "C" fn IsUserAgentAllowed(robotstxt: &str, user_agent: &str, url: &str) -> bool {
-    let user_agents = vec![user_agent.to_string()];
-    let mut matcher = RobotsMatcher::<LongestMatchRobotsMatchStrategy>::default();
-    matcher.allowed_by_robots(&robotstxt, user_agents, &url)
-}
-
-#[no_mangle]
-pub extern "C" fn hello() {
-    println!("Hello from rust");
+pub extern "C" fn IsUserAgentAllowed(
+    robotstxt: *const c_char,
+    user_agent: *const c_char,
+    url: *const c_char,
+) -> bool {
+    if let (Ok(robotstxt), Ok(user_agent), Ok(url)) = unsafe {
+        (
+            CStr::from_ptr(robotstxt).to_str(),
+            CStr::from_ptr(user_agent).to_str(),
+            CStr::from_ptr(url).to_str(),
+        )
+    } {
+        println!("{} {} {}", robotstxt, user_agent, url);
+        let user_agents = vec![user_agent.to_string()];
+        let mut matcher = RobotsMatcher::<LongestMatchRobotsMatchStrategy>::default();
+        matcher.allowed_by_robots(&robotstxt, user_agents, &url)
+    } else {
+        panic!("Invalid parameters");
+    }
 }
