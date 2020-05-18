@@ -23,3 +23,8 @@ pub extern "C" fn IsUserAgentAllowed(robotstxt: &str, user_agent: &str, url: &st
     let mut matcher = RobotsMatcher::<LongestMatchRobotsMatchStrategy>::default();
     matcher.allowed_by_robots(&robotstxt, user_agents, &url)
 }
+
+#[no_mangle]
+pub extern "C" fn hello() {
+    println!("Hello from rust");
+}

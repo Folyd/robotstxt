@@ -1,11 +1,11 @@
 [package]
-name = "ffi"
+name = "tests"
 version = "0.1.0"
 authors = ["Folyd <lyshuhow@gmail.com>"]
 edition = "2018"
 
 [lib]
-name = "rust_robostxt"
+name = "rust_robotstxt"
 crate-type = ["dylib"]
 
 [dependencies]

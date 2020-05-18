@@ -17,12 +17,16 @@
 #ifndef ROBOTSTXT_RUST_H
 #define ROBOTSTXT_RUST_H
 
+#include <string>
+
+using namespace std;
 #ifdef __cplusplus
 extern "C"{
 #endif
 
-bool IsUserAgentAllowed(const absl::string_view robotstxt,
-                        const std::string& useragent, const std::string& url) ;
+bool IsUserAgentAllowed(const char** &robotstxt,
+                        const char** &useragent, const char** &url);
+void hello();
 
 #ifdef __cplusplus
 }
