@@ -195,6 +195,44 @@ mod tests {
     }
 
     #[test]
+    // Google specific: the I-D allows any line that crawlers might need, such as
+    // sitemaps, which Google supports.
+    // See REP I-D section "Other records".
+    // https://tools.ietf.org/html/draft-koster-rep#section-2.2.4
+    fn test_non_standard_line_example_sitemap() {
+        let mut report = RobotsStatsReporter::default();
+
+        {
+            let sitemap_loc = "http://foo.bar/sitemap.xml";
+            let mut robotstxt: String = "User-Agent: foo\n\
+        Allow: /some/path\n\
+        User-Agent: bar\n\
+        \n\
+        \n"
+            .into();
+            robotstxt.push_str(&format!("Sitemap: {}\n", sitemap_loc));
+
+            super::parse_robotstxt(&robotstxt, &mut report);
+            assert_eq!(sitemap_loc, report.sitemap.as_str());
+        }
+
+        {
+            // A sitemap line may appear anywhere in the file.
+            let mut robotstxt = String::new();
+            let sitemap_loc = "http://foo.bar/sitemap.xml";
+            let robotstxt_temp = "User-Agent: foo\n\
+            Allow: /some/path\n\
+            User-Agent: bar\n\
+            \n\
+            \n";
+            robotstxt.push_str(&format!("Sitemap: {}\n{}", sitemap_loc, robotstxt_temp));
+
+            super::parse_robotstxt(&robotstxt, &mut report);
+            assert_eq!(sitemap_loc, report.sitemap.as_str());
+        }
+    }
+
+    #[test]
     fn test_get_path_params_query() {
         let f = get_path_params_query;
         assert_eq!("/", f(""));
