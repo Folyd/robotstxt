@@ -97,7 +97,102 @@ pub fn parse_robotstxt(robots_body: &str, parse_callback: &mut impl RobotsParseH
 
 #[cfg(test)]
 mod tests {
-    use super::get_path_params_query;
+    use super::*;
+
+    #[derive(Default)]
+    struct RobotsStatsReporter {
+        last_line_seen: u32,
+        valid_directives: u32,
+        unknown_directives: u32,
+        sitemap: String,
+    }
+
+    impl RobotsStatsReporter {
+        fn digest(&mut self, line_num: u32) {
+            assert!(line_num >= self.last_line_seen);
+            self.last_line_seen = line_num;
+            self.valid_directives += 1;
+        }
+    }
+
+    impl RobotsParseHandler for RobotsStatsReporter {
+        fn handle_robots_start(&mut self) {
+            self.last_line_seen = 0;
+            self.valid_directives = 0;
+            self.unknown_directives = 0;
+            self.sitemap.clear();
+        }
+
+        fn handle_robots_end(&mut self) {}
+
+        fn handle_user_agent(&mut self, line_num: u32, user_agent: &str) {
+            self.digest(line_num);
+        }
+
+        fn handle_allow(&mut self, line_num: u32, value: &str) {
+            self.digest(line_num);
+        }
+
+        fn handle_disallow(&mut self, line_num: u32, value: &str) {
+            self.digest(line_num);
+        }
+
+        fn handle_sitemap(&mut self, line_num: u32, value: &str) {
+            self.digest(line_num);
+            self.sitemap.push_str(value);
+        }
+
+        // Any other unrecognized name/v pairs.
+        fn handle_unknown_action(&mut self, line_num: u32, action: &str, value: &str) {
+            self.last_line_seen = line_num;
+            self.unknown_directives += 1;
+        }
+    }
+
+    #[test]
+    // Different kinds of line endings are all supported: %x0D / %x0A / %x0D.0A
+    fn test_lines_numbers_are_counted_correctly() {
+        let mut report = RobotsStatsReporter::default();
+        let unix_file = "User-Agent: foo\n\
+        Allow: /some/path\n\
+        User-Agent: bar\n\
+        \n\
+        \n\
+        Disallow: /\n";
+        super::parse_robotstxt(unix_file, &mut report);
+        assert_eq!(4, report.valid_directives);
+        assert_eq!(6, report.last_line_seen);
+
+        let mac_file = "User-Agent: foo\r\
+        Allow: /some/path\r\
+        User-Agent: bar\r\
+        \r\
+        \r\
+        Disallow: /\r";
+        super::parse_robotstxt(mac_file, &mut report);
+        assert_eq!(4, report.valid_directives);
+        assert_eq!(6, report.last_line_seen);
+
+        let no_final_new_line = "User-Agent: foo\n\
+        Allow: /some/path\n\
+        User-Agent: bar\n\
+        \n\
+        \n\
+        Disallow: /";
+        super::parse_robotstxt(no_final_new_line, &mut report);
+        assert_eq!(4, report.valid_directives);
+        assert_eq!(6, report.last_line_seen);
+
+        let mixed_file = "User-Agent: foo\n\
+        Allow: /some/path\r\n\
+        User-Agent: bar\n\
+        \r\n\
+        \n\
+        Disallow: /";
+        super::parse_robotstxt(mixed_file, &mut report);
+        assert_eq!(4, report.valid_directives);
+        assert_eq!(6, report.last_line_seen);
+    }
 
     #[test]
     fn test_get_path_params_query() {
