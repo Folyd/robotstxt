@@ -195,6 +195,52 @@ mod tests {
     }
 
     #[test]
+    // BOM characters are unparseable and thus skipped. The rules following the line
+    // are used.
+    fn test_utf8_byte_order_mark_is_skipped() {
+        let mut report = RobotsStatsReporter::default();
+        let utf8_file_full_bom = r"\xEF\xBB\xBF
+        User-Agent: foo\n
+        Allow: /AnyValue\n";
+        super::parse_robotstxt(utf8_file_full_bom, &mut report);
+        assert_eq!(2, report.valid_directives);
+        assert_eq!(0, report.unknown_directives);
+
+        // We allow as well partial ByteOrderMarks.
+        let utf8_file_partial_2bom = r"\xEF\xBB
+        User-Agent: foo\n
+        Allow: /AnyValue\n";
+        super::parse_robotstxt(utf8_file_partial_2bom, &mut report);
+        assert_eq!(2, report.valid_directives);
+        assert_eq!(0, report.unknown_directives);
+
+        let utf8_file_partial_1bom = r"\xEF
+        User-Agent: foo\n
+        Allow: /AnyValue\n";
+        super::parse_robotstxt(utf8_file_partial_1bom, &mut report);
+        assert_eq!(2, report.valid_directives);
+        assert_eq!(0, report.unknown_directives);
+
+        // If the BOM is not the right sequence, the first line looks like garbage
+        // that is skipped (we essentially see "\x11\xBFUser-Agent").
+        let utf8_file_broken_bom = r"\xEF\x11\xBF
+        User-Agent: foo\n
+        Allow: /AnyValue\n";
+        super::parse_robotstxt(utf8_file_broken_bom, &mut report);
+        assert_eq!(1, report.valid_directives);
+        // // We get one broken line.
+        assert_eq!(1, report.unknown_directives);
+
+        // Some other messed up file: BOMs only valid in the beginning of the file.
+        let utf8_bom_somewhere_in_middle_of_file = r"User-Agent: foo\n
+        \xEF\xBB\xBF
+        Allow: /AnyValue\n";
+        super::parse_robotstxt(utf8_bom_somewhere_in_middle_of_file, &mut report);
+        assert_eq!(1, report.valid_directives);
+        assert_eq!(1, report.unknown_directives);
+    }
+
+    #[test]
     // Google specific: the I-D allows any line that crawlers might need, such as
     // sitemaps, which Google supports.
     // See REP I-D section "Other records".
