@@ -275,7 +275,7 @@ impl<S: RobotsMatchStrategy> RobotsMatcher<S> {
     /// Verifies that the given user agent is valid to be matched against
     /// robots.txt. Valid user agent strings only contain the characters
     /// [a-zA-Z_-].
-    fn is_valid_user_agent_to_obey(user_agent: &str) -> bool {
+    pub fn is_valid_user_agent_to_obey(user_agent: &str) -> bool {
         !user_agent.is_empty() && Self::extract_user_agent(user_agent) == user_agent
     }
 

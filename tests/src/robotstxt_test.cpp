@@ -25,4 +25,6 @@ int main() {
             "disallow: /\n";
     bool result = IsUserAgentAllowed(robotstxt, "FooBot", "");
     cout << result << endl;
+
+    cout << IsValidUserAgentToObey("Foobot") << endl;
 }

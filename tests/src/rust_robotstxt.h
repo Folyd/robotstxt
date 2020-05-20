@@ -23,6 +23,8 @@ extern "C"{
 
 bool IsUserAgentAllowed(const char *robotstxt, const char *useragent, const char *url);
 
+bool IsValidUserAgentToObey(const char *useragent);
+
 #ifdef __cplusplus
 }
 #endif
