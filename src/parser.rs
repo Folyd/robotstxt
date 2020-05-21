@@ -131,11 +131,10 @@ impl<'a, Handler: RobotsParseHandler> RobotsTxtParser<'a, Handler> {
 
         let mut start = 0;
         let mut end = 0;
-        for (index, (ch, char_len_utf8)) in self
+        for (ch, char_len_utf8) in self
             .robots_body
             .chars()
             .map(|ch| (ch as usize, ch.len_utf8()))
-            .enumerate()
         {
             // Google-specific optimization: UTF-8 byte order marks should never
             // appear in a robots.txt file, but they do nevertheless. Skipping
