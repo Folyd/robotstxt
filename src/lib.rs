@@ -199,23 +199,23 @@ mod tests {
     // are used.
     fn test_utf8_byte_order_mark_is_skipped() {
         let mut report = RobotsStatsReporter::default();
-        let utf8_file_full_bom = r"\xEF\xBB\xBF
-        User-Agent: foo\n
+        let utf8_file_full_bom = "\u{EF}\u{BB}\u{BF}\
+        User-Agent: foo\n\
         Allow: /AnyValue\n";
         super::parse_robotstxt(utf8_file_full_bom, &mut report);
         assert_eq!(2, report.valid_directives);
         assert_eq!(0, report.unknown_directives);
 
         // We allow as well partial ByteOrderMarks.
-        let utf8_file_partial_2bom = r"\xEF\xBB
-        User-Agent: foo\n
+        let utf8_file_partial_2bom = "\u{EF}\u{BB}\
+        User-Agent: foo\n\
         Allow: /AnyValue\n";
         super::parse_robotstxt(utf8_file_partial_2bom, &mut report);
         assert_eq!(2, report.valid_directives);
         assert_eq!(0, report.unknown_directives);
 
-        let utf8_file_partial_1bom = r"\xEF
-        User-Agent: foo\n
+        let utf8_file_partial_1bom = "\u{EF}\
+        User-Agent: foo\n\
         Allow: /AnyValue\n";
         super::parse_robotstxt(utf8_file_partial_1bom, &mut report);
         assert_eq!(2, report.valid_directives);
@@ -223,8 +223,8 @@ mod tests {
 
         // If the BOM is not the right sequence, the first line looks like garbage
         // that is skipped (we essentially see "\x11\xBFUser-Agent").
-        let utf8_file_broken_bom = r"\xEF\x11\xBF
-        User-Agent: foo\n
+        let utf8_file_broken_bom = "\u{EF}\u{11}\u{BF}\
+        User-Agent: foo\n\
         Allow: /AnyValue\n";
         super::parse_robotstxt(utf8_file_broken_bom, &mut report);
         assert_eq!(1, report.valid_directives);
@@ -232,8 +232,8 @@ mod tests {
         assert_eq!(1, report.unknown_directives);
 
         // Some other messed up file: BOMs only valid in the beginning of the file.
-        let utf8_bom_somewhere_in_middle_of_file = r"User-Agent: foo\n
-        \xEF\xBB\xBF
+        let utf8_bom_somewhere_in_middle_of_file = "User-Agent: foo\n\
+        \u{EF}\u{BB}\u{BF}\
         Allow: /AnyValue\n";
         super::parse_robotstxt(utf8_bom_somewhere_in_middle_of_file, &mut report);
         assert_eq!(1, report.valid_directives);
