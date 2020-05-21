@@ -125,24 +125,34 @@ impl<'a, Handler: RobotsParseHandler> RobotsTxtParser<'a, Handler> {
         // If so, we can ignore the chars on a line past that.
         let max_line_len = 2083 * 8;
         let mut line_num = 0;
+        let mut bom_pos = 0;
         let mut last_was_carriage_return = false;
         self.handler.handle_robots_start();
 
         let mut start = 0;
         let mut end = 0;
-        for (index, ch) in self.robots_body.bytes().enumerate() {
+        for (index, (ch, char_len_utf8)) in self
+            .robots_body
+            .chars()
+            .map(|ch| (ch as usize, ch.len_utf8()))
+            .enumerate()
+        {
             // Google-specific optimization: UTF-8 byte order marks should never
             // appear in a robots.txt file, but they do nevertheless. Skipping
             // possible BOM-prefix in the first bytes of the input.
-            if index < utf_bom.len() && ch == utf_bom[index] {
+            if bom_pos < utf_bom.len() && ch == utf_bom[bom_pos] {
+                bom_pos += 1;
+                start += char_len_utf8;
+                end += char_len_utf8;
                 continue;
             }
+            bom_pos = utf_bom.len();
 
             if ch != 0x0A && ch != 0x0D {
                 // Non-line-ending char case.
                 // Put in next spot on current line, as long as there's room.
                 if (end - start) < max_line_len - 1 {
-                    end += 1;
+                    end += char_len_utf8;
                 }
             } else {
                 // Line-ending character char case.
@@ -153,8 +163,8 @@ impl<'a, Handler: RobotsParseHandler> RobotsTxtParser<'a, Handler> {
                     line_num += 1;
                     self.parse_and_emit_line(line_num, &self.robots_body[start..end]);
                 }
-                start = index + 1;
-                end = index + 1;
+                end += char_len_utf8;
+                start = end;
                 last_was_carriage_return = ch == 0x0D;
             }
         }
