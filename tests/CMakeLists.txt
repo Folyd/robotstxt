@@ -1,10 +1,10 @@
-project(robotstxt_test)
-cmake_minimum_required(VERSION 3.0)
+PROJECT(robotstxt_test)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
 
-set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+SET(CMAKE_CXX_STANDARD 11)
+SET(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-set(VERSION "0.0.0")
+SET(VERSION "0.0.0")
 
 ############ helper libs ############
 
@@ -33,21 +33,21 @@ ADD_SUBDIRECTORY(
         EXCLUDE_FROM_ALL
 )
 
-IF (ROBOTS_BUILD_TESTS)
-    INCLUDE(CTest)
 
-    # googletest
-    ADD_SUBDIRECTORY(${CMAKE_CURRENT_BINARY_DIR}/libs/gtest-src
-            ${CMAKE_CURRENT_BINARY_DIR}/libs/gtest-build
-            EXCLUDE_FROM_ALL)
+INCLUDE(CTest)
 
-    SET(INSTALL_GTEST 0)
-    SET(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+# googletest
+ADD_SUBDIRECTORY(${CMAKE_CURRENT_BINARY_DIR}/libs/gtest-src
+        ${CMAKE_CURRENT_BINARY_DIR}/libs/gtest-build
+        EXCLUDE_FROM_ALL)
 
-    IF (CMAKE_VERSION VERSION_LESS 2.8.11)
-        INCLUDE_DIRECTORIES(${gtest_SOURCE_DIR}/include)
-    ENDIF ()
-ENDIF (ROBOTS_BUILD_TESTS)
+SET(INSTALL_GTEST 0)
+SET(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+
+IF (CMAKE_VERSION VERSION_LESS 2.8.11)
+    INCLUDE_DIRECTORIES(${gtest_SOURCE_DIR}/include)
+ENDIF ()
+
 
 ########### compiler flags ##############
 
@@ -57,16 +57,16 @@ SET(COMPILER_FLAGS_TO_CHECK
 
 ########### project files ###############
 
-INCLUDE_DIRECTORIES(.)
+INCLUDE_DIRECTORIES(./src)
 
 ######### targets ###########
 
 SET(LIBROBOTS_LIBS)
 
-SET(robots_SRCS ./robots.cc)
+#SET(robots_SRCS ./robots.cc)
 SET(robots_LIBS absl::base absl::container absl::strings)
 
-ADD_LIBRARY(robots SHARED ${robots_SRCS})
+ADD_LIBRARY(robots SHARED ./target/debug/librust_robotstxt.dylib)
 TARGET_LINK_LIBRARIES(robots ${robots_LIBS})
 LIST(APPEND LIBROBOTS_LIBS "robots")
 
@@ -74,6 +74,6 @@ LIST(APPEND LIBROBOTS_LIBS "robots")
 
 ENABLE_TESTING()
 
-ADD_EXECUTABLE(robots-test ./robots_test.cc)
+ADD_EXECUTABLE(robots-test ./src/robots_test.cc)
 TARGET_LINK_LIBRARIES(robots-test ${LIBROBOTS_LIBS} gtest_main)
 ADD_TEST(NAME robots-test COMMAND robots-test)
