@@ -22,7 +22,7 @@ use robotstxt::RobotsMatcher;
 pub type Matcher = RobotsMatcher<LongestMatchRobotsMatchStrategy>;
 
 #[no_mangle]
-pub extern "C" fn IsUserAgentAllowed(
+pub extern "C" fn is_user_agent_allowed(
     robotstxt: *const c_char,
     user_agent: *const c_char,
     url: *const c_char,
@@ -46,7 +46,7 @@ pub extern "C" fn IsUserAgentAllowed(
 }
 
 #[no_mangle]
-pub extern "C" fn IsValidUserAgentToObey(user_agent: *const c_char) -> bool {
+pub extern "C" fn is_valid_user_agent_to_obey(user_agent: *const c_char) -> bool {
     if let Ok(user_agent) = unsafe {
         assert!(!user_agent.is_null());
 

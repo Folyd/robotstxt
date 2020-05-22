@@ -20,11 +20,11 @@
 using namespace std;
 
 int main() {
-    const char *robotstxt =
+    const string robotstxt =
             "user-agent: FooBot\n"
             "disallow: /\n";
-    bool result = IsUserAgentAllowed(robotstxt, "FooBot", "");
+    bool result = is_user_agent_allowed(robotstxt.c_str(), "FooBot", "");
     cout << result << endl;
 
-    cout << IsValidUserAgentToObey("Foobot") << endl;
+    cout << is_valid_user_agent_to_obey("Foobot") << endl;
 }

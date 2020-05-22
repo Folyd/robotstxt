@@ -26,6 +26,16 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 
+bool IsUserAgentAllowed(const absl::string_view robotstxt,
+                        const std::string& useragent, const std::string& url) {
+    return is_user_agent_allowed(std::string(robotstxt).c_str(), useragent.c_str(), url.c_str());
+}
+
+bool IsValidUserAgentToObey(
+        absl::string_view user_agent) {
+    return is_valid_user_agent_to_obey(std::string(user_agent).c_str());
+}
+
 // Google-specific: system test.
 TEST(RobotsUnittest, GoogleOnly_SystemTest) {
   const absl::string_view robotstxt =
