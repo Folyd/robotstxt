@@ -184,14 +184,14 @@ mod tests {
                 &format!("http://foo.bar{}/qux", longline_a),
             )
         );
-        // assert_eq!(
-        //     true,
-        //     matcher.one_agent_allowed_by_robots(
-        //         &robotstxt,
-        //         "FooBot",
-        //         &format!("http://foo.bar{}/fux", longline_b),
-        //     )
-        // );
+        assert_eq!(
+            true,
+            matcher.one_agent_allowed_by_robots(
+                &robotstxt,
+                "FooBot",
+                &format!("http://foo.bar{}/fux", longline_b),
+            )
+        );
     }
 
     #[test]
