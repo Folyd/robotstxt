@@ -14,8 +14,8 @@
 // limitations under the License.
 //
 
-#ifndef ROBOTSTXT_RUST_H
-#define ROBOTSTXT_RUST_H
+#ifndef RUST_ROBOTSTXT_H
+#define RUST_ROBOTSTXT_H
 
 #ifdef __cplusplus
 extern "C"{
@@ -29,4 +29,4 @@ bool is_valid_user_agent_to_obey(const char *useragent);
 }
 #endif
 
-#endif //ROBOTSTXT_RUST_H
+#endif //RUST_ROBOTSTXT_H

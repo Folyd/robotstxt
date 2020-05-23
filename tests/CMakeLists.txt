@@ -33,7 +33,6 @@ add_subdirectory(
         EXCLUDE_FROM_ALL
 )
 
-
 include(CTest)
 
 # googletest
@@ -50,9 +49,7 @@ ENDIF ()
 
 ########### compiler flags ##############
 
-set(COMPILER_FLAGS_TO_CHECK
-        "-Wall" "-Werror=implicit-function-declaration"
-        )
+set(COMPILER_FLAGS_TO_CHECK "-Wall" "-Werror=implicit-function-declaration")
 
 ########### project files ###############
 
@@ -70,7 +67,7 @@ target_link_libraries(robots-test absl::base absl::container absl::strings gtest
 # Set default ExternalProject root directory
 set_directory_properties(PROPERTIES EP_PREFIX ${CMAKE_BINARY_DIR}/Rust)
 
-# Add rust_example
+# Add rust_robots
 ExternalProject_Add(
         rust_robots
         DOWNLOAD_COMMAND ""
