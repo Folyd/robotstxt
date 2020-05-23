@@ -32,8 +32,7 @@
 use std::env;
 use std::fs;
 
-use robotstxt::matcher::LongestMatchRobotsMatchStrategy;
-use robotstxt::RobotsMatcher;
+use robotstxt::DefaultMatcher;
 
 fn show_help(name: &str) {
     eprintln!(
@@ -62,7 +61,7 @@ fn main() {
         (_, Some(filename), Some(user_agent), Some(url)) => {
             if let Ok(robots_content) = fs::read_to_string(filename.clone()) {
                 let user_agents = vec![user_agent.clone()];
-                let mut matcher = RobotsMatcher::<LongestMatchRobotsMatchStrategy>::default();
+                let mut matcher = DefaultMatcher::default();
                 let allowed = matcher.allowed_by_robots(&robots_content, user_agents, &url.clone());
 
                 println!(

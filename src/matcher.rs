@@ -83,16 +83,21 @@ impl MatchHierarchy {
     }
 }
 
-/// RobotsMatcher - matches robots.txt against URLs.
+/// Create a RobotsMatcher with the default matching strategy.
 ///
-/// The Matcher uses a default match strategy for Allow/Disallow patterns which
-/// is the official way of Google crawler to match robots.txt. It is also
-/// possible to provide a custom match strategy.
-///
-/// The entry point for the user is to call one of the *AllowedByRobots()
-/// methods that return directly if a URL is being allowed according to the
-/// robots.txt and the crawl agent.
-/// The RobotsMatcher can be re-used for URLs/robots.txt but is not thread-safe.
+/// The default matching strategy is longest-match as opposed to the former internet draft
+/// that provisioned first-match strategy. Analysis shows that longest-match,
+/// while more restrictive for crawlers, is what webmasters assume when writing
+/// directives. For example, in case of conflicting matches (both Allow and
+/// Disallow), the longest match is the one the user wants. For example, in
+/// case of a robots.txt file that has the following rules
+/// ```txt
+///   Allow: /
+///   Disallow: /cgi-bin
+/// ```
+/// it's pretty obvious what the webmaster wants: they want to allow crawl of
+/// every URI except /cgi-bin. However, according to the expired internet
+/// standard, crawlers should be allowed to crawl everything with such a rule.
 pub trait RobotsMatchStrategy {
     fn match_allow(&self, path: &str, pattern: &str) -> i32;
 
@@ -150,7 +155,7 @@ pub trait RobotsMatchStrategy {
 /// Implements the default robots.txt matching strategy. The maximum number of
 /// characters matched by a pattern is returned as its match priority.
 #[derive(Default)]
-pub struct LongestMatchRobotsMatchStrategy {}
+pub struct LongestMatchRobotsMatchStrategy;
 
 impl RobotsMatchStrategy for LongestMatchRobotsMatchStrategy {
     fn match_allow(&self, path: &str, pattern: &str) -> i32 {
@@ -170,6 +175,16 @@ impl RobotsMatchStrategy for LongestMatchRobotsMatchStrategy {
     }
 }
 
+/// RobotsMatcher - matches robots.txt against URLs.
+///
+/// The Matcher uses a default match strategy for Allow/Disallow patterns which
+/// is the official way of Google crawler to match robots.txt. It is also
+/// possible to provide a custom match strategy.
+///
+/// The entry point for the user is to call one of the [allowed_by_robots](./struct.RobotsMatcher.html#method.allowed_by_robots)
+/// methods that return directly if a URL is being allowed according to the
+/// robots.txt and the crawl agent.
+/// The RobotsMatcher can be re-used for URLs/robots.txt but is not thread-safe.
 #[derive(Default)]
 pub struct RobotsMatcher<S: RobotsMatchStrategy> {
     /// Characters of 'url' matching Allow.
@@ -185,10 +200,10 @@ pub struct RobotsMatcher<S: RobotsMatchStrategy> {
     /// True if saw any key: value pair.
     seen_separator: bool,
     /// The path we want to pattern match. Not owned and only a valid pointer
-    /// during the lifetime of *AllowedByRobots calls.
+    /// during the lifetime of [allowed_by_robots](./struct.RobotsMatcher.html#method.allowed_by_robots) calls.
     path: String,
     /// The User-Agents we are interested in. Not owned and only a valid
-    /// pointer during the lifetime of *AllowedByRobots calls.
+    /// pointer during the lifetime of [allowed_by_robots](./struct.RobotsMatcher.html#method.allowed_by_robots) calls.
     user_agents: Vec<String>,
     match_strategy: S,
 }

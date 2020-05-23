@@ -13,14 +13,32 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-
-#![allow(unused_variables)]
-
-pub use matcher::RobotsMatcher;
+//!
+//! A native Rust port of [Google's robots.txt parser and matcher C++ library](https://github.com/google/robotstxt).
+//!
+//! - Native Rust port, no third-part crate dependency
+//! - Preserves all behaviour of original library
+//! - 100% google original test passed
+//!
+//! # Quick start
+//! ```rust
+//! use robotstxt::DefaultMatcher;
+//!
+//! let mut matcher = DefaultMatcher::default();
+//! let robots_body = "user-agent: FooBot\n\
+//!                    disallow: /\n";
+//! assert_eq!(false, matcher.one_agent_allowed_by_robots(robots_body, "FooBot", "https://foo.com/"));
+//! ```
+use matcher::{LongestMatchRobotsMatchStrategy, RobotsMatcher};
 use parser::RobotsTxtParser;
 
+/// A matcher module.
 pub mod matcher;
+/// A parser module.
 pub mod parser;
+
+/// A default [RobotsMatcher](struct.RobotsMatcher.html) with [LongestMatchRobotsMatchStrategy](struct.LongestMatchRobotsMatchStrategy.html)`
+pub type DefaultMatcher = RobotsMatcher<LongestMatchRobotsMatchStrategy>;
 
 /// Handler for directives found in robots.txt.
 pub trait RobotsParseHandler {
@@ -97,10 +115,7 @@ pub fn parse_robotstxt(robots_body: &str, parse_callback: &mut impl RobotsParseH
 
 #[cfg(test)]
 mod tests {
-    use super::matcher::LongestMatchRobotsMatchStrategy;
     use super::*;
-
-    type Matcher = RobotsMatcher<LongestMatchRobotsMatchStrategy>;
 
     #[derive(Default)]
     struct RobotsStatsReporter {
@@ -154,7 +169,7 @@ mod tests {
 
     #[test]
     fn test_google_only_line_too_long() {
-        let mut matcher = Matcher::default();
+        let mut matcher = DefaultMatcher::default();
 
         let eol_len = "\n".len();
         let max_line_len = 2083 * 8;

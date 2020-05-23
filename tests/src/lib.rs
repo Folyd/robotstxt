@@ -16,10 +16,7 @@
 use std::ffi::CStr;
 use std::os::raw::c_char;
 
-use robotstxt::matcher::LongestMatchRobotsMatchStrategy;
-use robotstxt::RobotsMatcher;
-
-pub type Matcher = RobotsMatcher<LongestMatchRobotsMatchStrategy>;
+use robotstxt::DefaultMatcher;
 
 #[no_mangle]
 pub extern "C" fn is_user_agent_allowed(
@@ -38,7 +35,7 @@ pub extern "C" fn is_user_agent_allowed(
         )
     } {
         println!("{} {} {}", robotstxt, user_agent, url);
-        let mut matcher = Matcher::default();
+        let mut matcher = DefaultMatcher::default();
         matcher.one_agent_allowed_by_robots(&robotstxt, user_agent, url)
     } else {
         panic!("Invalid parameters");
@@ -52,7 +49,7 @@ pub extern "C" fn is_valid_user_agent_to_obey(user_agent: *const c_char) -> bool
 
         CStr::from_ptr(user_agent).to_str()
     } {
-        Matcher::is_valid_user_agent_to_obey(user_agent)
+        DefaultMatcher::is_valid_user_agent_to_obey(user_agent)
     } else {
         panic!("Invalid parameters");
     }

@@ -14,11 +14,10 @@
 // limitations under the License.
 //
 
-#![allow(unused_variables, dead_code)]
-
 use crate::RobotsParseHandler;
 
 #[derive(Eq, PartialEq)]
+/// A enum represents key types in robotstxt.
 pub enum ParseKeyType {
     /// Generic highlevel fields.
     UserAgent,
@@ -34,7 +33,9 @@ pub enum ParseKeyType {
 }
 
 /// A robots.txt has lines of key/value pairs. A ParsedRobotsKey represents
-/// a key. This class can parse a text-representation (including common typos)
+/// a key.
+///
+/// This class can parse a text-representation (including common typos)
 /// and represent them as an enumeration which allows for faster processing
 /// afterwards.
 /// For unparsable keys, the original string representation is kept.
@@ -57,8 +58,8 @@ impl Default for ParsedRobotsKey {
 
 impl ParsedRobotsKey {
     /// Parse given key text. Does not copy the text, so the text_key must stay
-    /// valid for the object's life-time or the next Parse() call.
-    fn parse(&mut self, key: &str) {
+    /// valid for the object's life-time or the next `parse()` call.
+    pub fn parse(&mut self, key: &str) {
         if self.validate_key(key, &["user-agent"], Some(&["useragent", "user agent"])) {
             self.type_ = ParseKeyType::UserAgent;
         } else if self.validate_key(key, &["allow"], None) {
@@ -78,12 +79,12 @@ impl ParsedRobotsKey {
     }
 
     /// Returns the type of key.
-    fn get_type(&self) -> &ParseKeyType {
+    pub fn get_type(&self) -> &ParseKeyType {
         &self.type_
     }
 
     /// If this is an unknown key, get the text.
-    fn get_unknown_text(&self) -> String {
+    pub fn get_unknown_text(&self) -> String {
         assert!(self.type_ == ParseKeyType::Unknown && !self.key_text.is_empty());
         self.key_text.to_string()
     }
@@ -98,6 +99,7 @@ impl ParsedRobotsKey {
     }
 }
 
+/// A robotstxt parser.
 pub struct RobotsTxtParser<'a, Handler: RobotsParseHandler> {
     robots_body: &'a str,
     handler: &'a mut Handler,
@@ -182,7 +184,7 @@ impl<'a, Handler: RobotsParseHandler> RobotsTxtParser<'a, Handler> {
     /// Attempts to parse a line of robots.txt into a key/value pair.
     ///
     /// On success, the parsed key and value, and true, are returned. If parsing is
-    /// unsuccessful, parseKeyAndValue returns two empty strings and false.
+    /// unsuccessful, `parse_key_value` returns two empty strings and false.
     pub fn parse_key_value(line: &str) -> (&str, &str, bool) {
         let mut line = line;
         // Remove comments from the current robots.txt line.
@@ -272,12 +274,15 @@ const HEX_DIGITS: [char; 16] = [
 ];
 
 /// Canonicalize the allowed/disallowed path patterns.
+///
 /// UTF-8 multibyte sequences (and other out-of-range ASCII values) are percent-encoded,
 /// and any existing percent-encoded values have their hex values normalised to uppercase.
 ///
 /// For example:
+/// ```txt
 ///     /SanJoséSellers ==> /Sanjos%C3%A9Sellers
 ///     %aa ==> %AA
+/// ```
 /// If the given path pattern is already adequately escaped,
 /// the original string is returned unchanged.
 pub fn escape_pattern(path: &str) -> String {
