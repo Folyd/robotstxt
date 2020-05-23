@@ -1,79 +1,93 @@
-PROJECT(robotstxt_test)
-CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
+project(robots)
+cmake_minimum_required(VERSION 3.0)
 
-SET(CMAKE_CXX_STANDARD 11)
-SET(CMAKE_POSITION_INDEPENDENT_CODE ON)
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-SET(VERSION "0.0.0")
+set(VERSION "0.0.0")
 
 ############ helper libs ############
 
-INCLUDE(CPack)
-INCLUDE(CheckCCompilerFlag)
-INCLUDE(ExternalProject)
+include(CPack)
+include(CheckCCompilerFlag)
+include(ExternalProject)
 
 ############ dependencies ##############
 
-CONFIGURE_FILE(CMakeLists.txt.in libs/CMakeLists.txt)
-EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" . RESULT_VARIABLE result WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/libs)
+configure_file(CMakeLists.txt.in libs/CMakeLists.txt)
+execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" . RESULT_VARIABLE result WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/libs)
 
 IF (result)
-    MESSAGE(FATAL_ERROR "Failed to download dependencies: ${result}")
+    message(FATAL_ERROR "Failed to download dependencies: ${result}")
 ENDIF ()
 
-EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} --build . RESULT_VARIABLE result WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/libs)
+execute_process(COMMAND ${CMAKE_COMMAND} --build . RESULT_VARIABLE result WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/libs)
 
 IF (result)
-    MESSAGE(FATAL_ERROR "Failed to download dependencies: ${result}")
+    message(FATAL_ERROR "Failed to download dependencies: ${result}")
 ENDIF ()
 
-ADD_SUBDIRECTORY(
+add_subdirectory(
         ${CMAKE_CURRENT_BINARY_DIR}/libs/abseil-cpp-src
         ${CMAKE_CURRENT_BINARY_DIR}/libs/abseil-cpp-build
         EXCLUDE_FROM_ALL
 )
 
 
-INCLUDE(CTest)
+include(CTest)
 
 # googletest
-ADD_SUBDIRECTORY(${CMAKE_CURRENT_BINARY_DIR}/libs/gtest-src
+add_subdirectory(${CMAKE_CURRENT_BINARY_DIR}/libs/gtest-src
         ${CMAKE_CURRENT_BINARY_DIR}/libs/gtest-build
         EXCLUDE_FROM_ALL)
 
-SET(INSTALL_GTEST 0)
-SET(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+set(INSTALL_GTEST 0)
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 
 IF (CMAKE_VERSION VERSION_LESS 2.8.11)
-    INCLUDE_DIRECTORIES(${gtest_SOURCE_DIR}/include)
+    include_directories(${gtest_SOURCE_DIR}/include)
 ENDIF ()
-
 
 ########### compiler flags ##############
 
-SET(COMPILER_FLAGS_TO_CHECK
+set(COMPILER_FLAGS_TO_CHECK
         "-Wall" "-Werror=implicit-function-declaration"
         )
 
 ########### project files ###############
 
-INCLUDE_DIRECTORIES(./src)
-
-######### targets ###########
-
-SET(LIBROBOTS_LIBS)
-
-#SET(robots_SRCS ./robots.cc)
-SET(robots_LIBS absl::base absl::container absl::strings)
-
-ADD_LIBRARY(robots SHARED ./target/debug/librust_robotstxt.dylib)
-TARGET_LINK_LIBRARIES(robots ${robots_LIBS})
-LIST(APPEND LIBROBOTS_LIBS "robots")
+include_directories(./src)
 
 ############ tests ##############
 
-ENABLE_TESTING()
+enable_testing()
 
-ADD_EXECUTABLE(robots-test ./src/robots_test.cc)
-TARGET_LINK_LIBRARIES(robots-test ${LIBROBOTS_LIBS} gtest_main)
-ADD_TEST(NAME robots-test COMMAND robots-test)
+add_executable(robots-test ./src/robots_test.cc)
+target_link_libraries(robots-test absl::base absl::container absl::strings gtest_main)
+
+############ Rust lib ############
+
+# Set default ExternalProject root directory
+set_directory_properties(PROPERTIES EP_PREFIX ${CMAKE_BINARY_DIR}/Rust)
+
+# Add rust_example
+ExternalProject_Add(
+        rust_robots
+        DOWNLOAD_COMMAND ""
+        CONFIGURE_COMMAND ""
+        BUILD_COMMAND cargo build COMMAND cargo build --release
+        BINARY_DIR "${CMAKE_SOURCE_DIR}"
+        INSTALL_COMMAND ""
+        LOG_BUILD ON)
+
+# Create dependency
+add_dependencies(robots-test rust_robots)
+
+# Specify link libraries
+target_link_libraries(robots-test
+        debug "${CMAKE_SOURCE_DIR}/target/debug/librust_robotstxt.a"
+        optimized "${CMAKE_SOURCE_DIR}/target/release/librust_robotstxt.a")
+
+set_target_properties(robots-test PROPERTIES CXX_STANDARD 11 CXX_STANDARD_REQUIRED ON)
+
+add_test(NAME robots-test COMMAND robots-test)

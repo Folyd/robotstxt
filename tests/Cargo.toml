@@ -6,7 +6,7 @@ edition = "2018"
 
 [lib]
 name = "rust_robotstxt"
-crate-type = ["dylib"]
+crate-type = ["staticlib"]
 
 [dependencies]
 robotstxt = { path = ".." }
