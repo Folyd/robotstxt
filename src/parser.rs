@@ -131,6 +131,9 @@ impl<'a, Handler: RobotsParseHandler> RobotsTxtParser<'a, Handler> {
 
         let mut start = 0;
         let mut end = 0;
+        // We should skip the rest part which exceed max_line_len
+        // in the current line.
+        let mut skip_exceed = 0;
         for (ch, char_len_utf8) in self
             .robots_body
             .chars()
@@ -152,6 +155,8 @@ impl<'a, Handler: RobotsParseHandler> RobotsTxtParser<'a, Handler> {
                 // Put in next spot on current line, as long as there's room.
                 if (end - start) < max_line_len - 1 {
                     end += char_len_utf8;
+                } else {
+                    skip_exceed += 1;
                 }
             } else {
                 // Line-ending character char case.
@@ -162,9 +167,11 @@ impl<'a, Handler: RobotsParseHandler> RobotsTxtParser<'a, Handler> {
                     line_num += 1;
                     self.parse_and_emit_line(line_num, &self.robots_body[start..end]);
                 }
-                end += char_len_utf8;
+                // Add skip_exceed to skip those chars.
+                end += skip_exceed + char_len_utf8;
                 start = end;
                 last_was_carriage_return = ch == 0x0D;
+                skip_exceed = 0;
             }
         }
         line_num += 1;
