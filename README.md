@@ -1,12 +1,33 @@
 # robotstxt
 
+![Crates.io](https://img.shields.io/crates/v/robotstxt)
+![Docs.rs](https://docs.rs/robotstxt/badge.svg)
 [![Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 
 A native Rust port of [Google's robots.txt parser and matcher C++ library](https://github.com/google/robotstxt).
 
 - Native Rust port, no third-part crate dependency
-- Preserves all behaviour of original library
+- Preserves all behavior of original library
+- Consistent API with original library
 - 100% google original test passed
+
+## Installation
+
+```toml
+[dependencies]
+robotstxt = "0.2.0"
+```
+
+## Quick start
+
+```rust
+use robotstxt::DefaultMatcher;
+
+let mut matcher = DefaultMatcher::default();
+let robots_body = "user-agent: FooBot\n\
+                   disallow: /\n";
+assert_eq!(false, matcher.one_agent_allowed_by_robots(robots_body, "FooBot", "https://foo.com/"));
+```
 
 ## About
 
