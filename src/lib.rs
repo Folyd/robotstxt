@@ -55,6 +55,36 @@ pub trait RobotsParseHandler {
 /// Extracts path (with params) and query part from URL. Removes scheme,
 /// authority, and fragment. Result always starts with "/".
 /// Returns "/" if the url doesn't have a path or is not valid.
+/// ```rust
+///use robotstxt::get_path_params_query;
+///
+///let f= get_path_params_query;
+///assert_eq!("/", f(""));
+///assert_eq!("/", f("http://www.example.com"));
+///assert_eq!("/", f("http://www.example.com/"));
+///assert_eq!("/a", f("http://www.example.com/a"));
+///assert_eq!("/a/", f("http://www.example.com/a/"));
+///assert_eq!(
+///    "/a/b?c=http://d.e/",
+///    f("http://www.example.com/a/b?c=http://d.e/")
+///);
+///assert_eq!(
+///    "/a/b?c=d&e=f",
+///    f("http://www.example.com/a/b?c=d&e=f#fragment")
+///);
+///assert_eq!("/", f("example.com"));
+///assert_eq!("/", f("example.com/"));
+///assert_eq!("/a", f("example.com/a"));
+///assert_eq!("/a/", f("example.com/a/"));
+///assert_eq!("/a/b?c=d&e=f", f("example.com/a/b?c=d&e=f#fragment"));
+///assert_eq!("/", f("a"));
+///assert_eq!("/", f("a/"));
+///assert_eq!("/a", f("/a"));
+///assert_eq!("/b", f("a/b"));
+///assert_eq!("/?a", f("example.com?a"));
+///assert_eq!("/a;b", f("example.com/a;b#c"));
+///assert_eq!("/b/c", f("//a/b/c"));
+/// ```
 pub fn get_path_params_query(url: &str) -> String {
     fn find_first_of(s: &str, pattern: &str, start_position: usize) -> Option<usize> {
         s[start_position..]
@@ -336,35 +366,5 @@ mod tests {
             super::parse_robotstxt(&robotstxt, &mut report);
             assert_eq!(sitemap_loc, report.sitemap.as_str());
         }
-    }
-
-    #[test]
-    fn test_get_path_params_query() {
-        let f = get_path_params_query;
-        assert_eq!("/", f(""));
-        assert_eq!("/", f("http://www.example.com"));
-        assert_eq!("/", f("http://www.example.com/"));
-        assert_eq!("/a", f("http://www.example.com/a"));
-        assert_eq!("/a/", f("http://www.example.com/a/"));
-        assert_eq!(
-            "/a/b?c=http://d.e/",
-            f("http://www.example.com/a/b?c=http://d.e/")
-        );
-        assert_eq!(
-            "/a/b?c=d&e=f",
-            f("http://www.example.com/a/b?c=d&e=f#fragment")
-        );
-        assert_eq!("/", f("example.com"));
-        assert_eq!("/", f("example.com/"));
-        assert_eq!("/a", f("example.com/a"));
-        assert_eq!("/a/", f("example.com/a/"));
-        assert_eq!("/a/b?c=d&e=f", f("example.com/a/b?c=d&e=f#fragment"));
-        assert_eq!("/", f("a"));
-        assert_eq!("/", f("a/"));
-        assert_eq!("/a", f("/a"));
-        assert_eq!("/b", f("a/b"));
-        assert_eq!("/?a", f("example.com?a"));
-        assert_eq!("/a;b", f("example.com/a;b#c"));
-        assert_eq!("/b/c", f("//a/b/c"));
     }
 }

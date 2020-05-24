@@ -19,11 +19,11 @@ use crate::RobotsParseHandler;
 #[derive(Eq, PartialEq)]
 /// A enum represents key types in robotstxt.
 pub enum ParseKeyType {
-    /// Generic highlevel fields.
+    // Generic highlevel fields.
     UserAgent,
     Sitemap,
 
-    /// Fields within a user-agent.
+    // Fields within a user-agent.
     Allow,
     Disallow,
 
