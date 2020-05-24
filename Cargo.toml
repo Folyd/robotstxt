@@ -1,8 +1,15 @@
 [package]
 name = "robotstxt"
-version = "0.1.0"
+version = "0.2.0"
+description = "A native Rust port of Google's robots.txt parser and matcher C++ library."
 authors = ["Folyd <lyshuhow@gmail.com>"]
 edition = "2018"
+license = "Apache-2.0"
+homepage = "https://github.com/Folyd/robotstxt"
+repository = "https://github.com/Folyd/robotstxt"
+categories = ["parser-implementations", "parsing"]
+keywords = ["robotstxt", "robots", "parser"]
+readme = "README.md"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
