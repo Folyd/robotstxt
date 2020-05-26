@@ -7,8 +7,9 @@
 A native Rust port of [Google's robots.txt parser and matcher C++ library](https://github.com/google/robotstxt).
 
 - Native Rust port, no third-part crate dependency
+- Zero unsafe code
 - Preserves all behavior of original library
-- Consistent API with original library
+- Consistent API with the original library
 - 100% google original test passed
 
 ## Installation
@@ -63,5 +64,5 @@ Test project ~/robotstxt/tests/c-build
 
 ## License
 
-The robots.txt parser and matcher Rust library is licensed under the terms of the
+The robotstxt parser and matcher Rust library is licensed under the terms of the
 Apache license. See [LICENSE](LICENSE) for more information.
