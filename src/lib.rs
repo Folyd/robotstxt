@@ -29,6 +29,8 @@
 //!                    disallow: /\n";
 //! assert_eq!(false, matcher.one_agent_allowed_by_robots(robots_body, "FooBot", "https://foo.com/"));
 //! ```
+#![allow(unused_variables)]
+
 use matcher::{LongestMatchRobotsMatchStrategy, RobotsMatcher};
 use parser::RobotsTxtParser;
 
@@ -195,48 +197,6 @@ mod tests {
             self.last_line_seen = line_num;
             self.unknown_directives += 1;
         }
-    }
-
-    #[test]
-    fn test_google_only_line_too_long() {
-        let mut matcher = DefaultMatcher::default();
-
-        let eol_len = "\n".len();
-        let max_line_len = 2083 * 8;
-        let allow = "allow: ";
-        let disallow = "disallow: ";
-
-        let mut robotstxt: String = "user-agent: FooBot\n\
-                               disallow: /\n"
-            .into();
-        let mut longline_a = String::from("/x/");
-        let mut longline_b = String::from("/x/");
-        let max_length = max_line_len - longline_a.len() - allow.len() + eol_len;
-
-        longline_a.push_str(&"a".repeat(max_length - longline_a.len()));
-        longline_b.push_str(&"b".repeat(max_length - longline_b.len()));
-        robotstxt.push_str(&format!("{}{}/qux\n", allow, longline_a));
-        robotstxt.push_str(&format!("{}{}/qux\n", allow, longline_b));
-        assert_eq!(
-            false,
-            matcher.one_agent_allowed_by_robots(&robotstxt, "FooBot", "http://foo.bar/")
-        );
-        assert_eq!(
-            true,
-            matcher.one_agent_allowed_by_robots(
-                &robotstxt,
-                "FooBot",
-                &format!("http://foo.bar{}/qux", longline_a),
-            )
-        );
-        assert_eq!(
-            true,
-            matcher.one_agent_allowed_by_robots(
-                &robotstxt,
-                "FooBot",
-                &format!("http://foo.bar{}/fux", longline_b),
-            )
-        );
     }
 
     #[test]

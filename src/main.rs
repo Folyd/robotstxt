@@ -18,7 +18,7 @@
 /// to records found in a local robots.txt file, based on Google's robots.txt
 /// parsing and matching algorithms.
 /// Usage:
-///     robots_main <local_path_to_robotstxt> <user_agent> <url>
+///     cargo run <local_path_to_robotstxt> <user_agent> <url>
 /// Arguments:
 /// local_path_to_robotstxt: local path to a file containing robots.txt records.
 ///   For example: /home/users/username/robots.txt
