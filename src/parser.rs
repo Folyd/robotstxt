@@ -13,7 +13,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-#![allow(unused_variables, dead_code)]
 
 use crate::RobotsParseHandler;
 
@@ -363,6 +362,8 @@ pub fn escape_pattern(path: &str) -> String {
 
 #[cfg(test)]
 mod tests {
+    #![allow(unused_variables)]
+
     use crate::parser::*;
     use crate::RobotsParseHandler;
 

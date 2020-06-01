@@ -29,7 +29,6 @@
 //!                    disallow: /\n";
 //! assert_eq!(false, matcher.one_agent_allowed_by_robots(robots_body, "FooBot", "https://foo.com/"));
 //! ```
-#![allow(unused_variables)]
 
 use std::borrow::Cow;
 
@@ -41,7 +40,7 @@ pub mod matcher;
 /// A parser module.
 pub mod parser;
 
-/// A default [RobotsMatcher](struct.RobotsMatcher.html) with [LongestMatchRobotsMatchStrategy](struct.LongestMatchRobotsMatchStrategy.html)`
+/// A default [RobotsMatcher](struct.RobotsMatcher.html) with [LongestMatchRobotsMatchStrategy](struct.LongestMatchRobotsMatchStrategy.html).
 pub type DefaultMatcher<'a> = RobotsMatcher<'a, LongestMatchRobotsMatchStrategy>;
 
 /// Handler for directives found in robots.txt.
@@ -149,6 +148,8 @@ pub fn parse_robotstxt(robots_body: &str, parse_callback: &mut impl RobotsParseH
 
 #[cfg(test)]
 mod tests {
+    #![allow(unused_variables)]
+
     use super::*;
 
     #[derive(Default)]
