@@ -16,6 +16,8 @@
 
 #![allow(unused_variables, dead_code)]
 
+use std::borrow::Cow;
+
 use crate::RobotsParseHandler;
 
 /// Instead of just maintaining a Boolean indicating whether a given line has
@@ -217,7 +219,7 @@ impl RobotsMatchStrategy for LongestMatchRobotsMatchStrategy {
 /// robots.txt and the crawl agent.
 /// The RobotsMatcher can be re-used for URLs/robots.txt but is not thread-safe.
 #[derive(Default)]
-pub struct RobotsMatcher<S: RobotsMatchStrategy> {
+pub struct RobotsMatcher<'a, S: RobotsMatchStrategy> {
     /// Characters of 'url' matching Allow.
     allow: MatchHierarchy,
     /// Characters of 'url' matching Disallow.
@@ -232,17 +234,17 @@ pub struct RobotsMatcher<S: RobotsMatchStrategy> {
     seen_separator: bool,
     /// The path we want to pattern match. Not owned and only a valid pointer
     /// during the lifetime of [allowed_by_robots](./struct.RobotsMatcher.html#method.allowed_by_robots) calls.
-    path: String,
+    path: Cow<'a, str>,
     /// The User-Agents we are interested in. Not owned and only a valid
     /// pointer during the lifetime of [allowed_by_robots](./struct.RobotsMatcher.html#method.allowed_by_robots) calls.
-    user_agents: Vec<String>,
+    user_agents: Vec<&'a str>,
     match_strategy: S,
 }
 
-impl<S: RobotsMatchStrategy> RobotsMatcher<S> {
+impl<'a, S: RobotsMatchStrategy> RobotsMatcher<'a, S> {
     /// Initialize next path and user-agents to check. Path must contain only the
     /// path, params, and query (if any) of the url and must start with a '/'.
-    fn init_user_agents_and_path(&mut self, user_agents: Vec<String>, path: String) {
+    fn init_user_agents_and_path(&mut self, user_agents: Vec<&'a str>, path: Cow<'a, str>) {
         self.path = path;
         self.user_agents = user_agents;
     }
@@ -251,9 +253,9 @@ impl<S: RobotsMatchStrategy> RobotsMatcher<S> {
     /// "user_agents" vector. 'url' must be %-encoded according to RFC3986.
     pub fn allowed_by_robots(
         &mut self,
-        robots_body: &str,
-        user_agents: Vec<String>,
-        url: &str,
+        robots_body: &'a str,
+        user_agents: Vec<&'a str>,
+        url: &'a str,
     ) -> bool
     where
         Self: RobotsParseHandler,
@@ -270,14 +272,14 @@ impl<S: RobotsMatchStrategy> RobotsMatcher<S> {
     /// be %-encoded according to RFC3986.
     pub fn one_agent_allowed_by_robots(
         &mut self,
-        robots_txt: &str,
-        user_agent: &str,
-        url: &str,
+        robots_txt: &'a str,
+        user_agent: &'a str,
+        url: &'a str,
     ) -> bool
     where
         Self: RobotsParseHandler,
     {
-        self.allowed_by_robots(robots_txt, vec![user_agent.to_string()], url)
+        self.allowed_by_robots(robots_txt, vec![user_agent], url)
     }
 
     /// Returns true if we are disallowed from crawling a matching URI.
@@ -345,7 +347,7 @@ impl<S: RobotsMatchStrategy> RobotsMatcher<S> {
     }
 }
 
-impl<S: RobotsMatchStrategy> RobotsParseHandler for RobotsMatcher<S> {
+impl<S: RobotsMatchStrategy> RobotsParseHandler for RobotsMatcher<'_, S> {
     fn handle_robots_start(&mut self) {
         // This is a new robots.txt file, so we need to reset all the instance member
         // variables. We do it in the same order the instance member variables are
@@ -448,9 +450,9 @@ mod test {
     use crate::matcher::*;
 
     #[test]
-    fn test_extract_user_agent() {
+    fn test_extract_user_agent<'a>() {
         // Example: 'Googlebot/2.1' becomes 'Googlebot'
-        type Target = RobotsMatcher<LongestMatchRobotsMatchStrategy>;
+        type Target<'a> = RobotsMatcher<'a, LongestMatchRobotsMatchStrategy>;
         assert_eq!("Googlebot", Target::extract_user_agent("Googlebot/2.1"));
         assert_eq!("Googlebot", Target::extract_user_agent("Googlebot"));
         assert_eq!("Googlebot-", Target::extract_user_agent("Googlebot-"));

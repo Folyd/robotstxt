@@ -31,6 +31,8 @@
 //! ```
 #![allow(unused_variables)]
 
+use std::borrow::Cow;
+
 use matcher::{LongestMatchRobotsMatchStrategy, RobotsMatcher};
 use parser::RobotsTxtParser;
 
@@ -40,7 +42,7 @@ pub mod matcher;
 pub mod parser;
 
 /// A default [RobotsMatcher](struct.RobotsMatcher.html) with [LongestMatchRobotsMatchStrategy](struct.LongestMatchRobotsMatchStrategy.html)`
-pub type DefaultMatcher = RobotsMatcher<LongestMatchRobotsMatchStrategy>;
+pub type DefaultMatcher<'a> = RobotsMatcher<'a, LongestMatchRobotsMatchStrategy>;
 
 /// Handler for directives found in robots.txt.
 pub trait RobotsParseHandler {
@@ -87,7 +89,7 @@ pub trait RobotsParseHandler {
 ///assert_eq!("/a;b", f("example.com/a;b#c"));
 ///assert_eq!("/b/c", f("//a/b/c"));
 /// ```
-pub fn get_path_params_query(url: &str) -> String {
+pub fn get_path_params_query(url: &str) -> Cow<str> {
     fn find_first_of(s: &str, pattern: &str, start_position: usize) -> Option<usize> {
         s[start_position..]
             .find(|c| pattern.contains(c))
@@ -121,18 +123,18 @@ pub fn get_path_params_query(url: &str) -> String {
     if let Some(path_start) = find_first_of(url, "/?;", protocol_end.unwrap()) {
         let hash_pos = find(url, "#", search_start);
         if hash_pos.is_some() && hash_pos.unwrap() < path_start {
-            return "/".into();
+            return Cow::Borrowed("/");
         }
 
         let path_end = hash_pos.unwrap_or_else(|| url.len());
         if url.get(path_start..=path_start) != Some("/") {
             // Prepend a slash if the result would start e.g. with '?'.
-            return format!("/{}", &url[path_start..path_end]);
+            return Cow::Owned(format!("/{}", &url[path_start..path_end]));
         }
-        return String::from(&url[path_start..path_end]);
+        return Cow::Borrowed(&url[path_start..path_end]);
     }
 
-    "/".into()
+    Cow::Borrowed("/")
 }
 
 /// Parses body of a robots.txt and emits parse callbacks. This will accept
