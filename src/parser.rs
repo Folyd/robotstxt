@@ -233,10 +233,10 @@ impl<'a, Handler: RobotsParseHandler> RobotsTxtParser<'a, Handler> {
     }
 
     pub fn need_escape_value_for_key(key: &ParsedRobotsKey) -> bool {
-        match key.get_type() {
-            ParseKeyType::UserAgent | ParseKeyType::Sitemap => false,
-            _ => true,
-        }
+        !matches!(
+            key.get_type(),
+            ParseKeyType::UserAgent | ParseKeyType::Sitemap
+        )
     }
 
     fn parse_and_emit_line(&mut self, current_line: u32, line: &str) {
