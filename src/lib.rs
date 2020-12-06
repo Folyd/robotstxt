@@ -40,7 +40,7 @@ pub mod matcher;
 /// A parser module.
 pub mod parser;
 
-/// A default [RobotsMatcher](struct.RobotsMatcher.html) with [LongestMatchRobotsMatchStrategy](struct.LongestMatchRobotsMatchStrategy.html).
+/// A default [RobotsMatcher] with [LongestMatchRobotsMatchStrategy].
 pub type DefaultMatcher<'a> = RobotsMatcher<'a, LongestMatchRobotsMatchStrategy>;
 
 /// Handler for directives found in robots.txt.

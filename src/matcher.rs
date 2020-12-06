@@ -214,7 +214,7 @@ impl RobotsMatchStrategy for LongestMatchRobotsMatchStrategy {
 /// is the official way of Google crawler to match robots.txt. It is also
 /// possible to provide a custom match strategy.
 ///
-/// The entry point for the user is to call one of the [allowed_by_robots](./struct.RobotsMatcher.html#method.allowed_by_robots)
+/// The entry point for the user is to call one of the [allowed_by_robots](RobotsMatcher::allowed_by_robots())
 /// methods that return directly if a URL is being allowed according to the
 /// robots.txt and the crawl agent.
 /// The RobotsMatcher can be re-used for URLs/robots.txt but is not thread-safe.
@@ -233,10 +233,10 @@ pub struct RobotsMatcher<'a, S: RobotsMatchStrategy> {
     /// True if saw any key: value pair.
     seen_separator: bool,
     /// The path we want to pattern match. Not owned and only a valid pointer
-    /// during the lifetime of [allowed_by_robots](./struct.RobotsMatcher.html#method.allowed_by_robots) calls.
+    /// during the lifetime of [allowed_by_robots](RobotsMatcher::allowed_by_robots()) calls.
     path: Cow<'a, str>,
     /// The User-Agents we are interested in. Not owned and only a valid
-    /// pointer during the lifetime of [allowed_by_robots](./struct.RobotsMatcher.html#method.allowed_by_robots) calls.
+    /// pointer during the lifetime of [allowed_by_robots](RobotsMatcher::allowed_by_robots()) calls.
     user_agents: Vec<&'a str>,
     match_strategy: S,
 }
