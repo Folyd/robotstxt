@@ -85,7 +85,6 @@ impl ParsedRobotsKey {
 
     /// If this is an unknown key, get the text.
     pub fn get_unknown_text(&self) -> String {
-        assert!(self.type_ == ParseKeyType::Unknown && !self.key_text.is_empty());
         self.key_text.to_string()
     }
 

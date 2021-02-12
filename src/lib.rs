@@ -332,7 +332,7 @@ mod tests {
     }
 
     #[test]
-    fn test_bad_case() {
+    fn test_blank_line_case() {
         let robots_content = r#"User-agent: *
 Disallow: /*q=
 Disallow: /users/*?
@@ -348,7 +348,22 @@ Sitemap: http://sitemaps.test.net/sitemap-index.xml.gz"#;
         let mut matcher = DefaultMatcher::default();
         assert!(matcher.one_agent_allowed_by_robots(
             &robots_content,
-            "oldnews",
+            "bot",
+            "https://www.test.com/"
+        ));
+    }
+
+    #[test]
+    fn test_unknown_robotstxt_case() {
+        let robots_content = "#!/usr/bin/env bash\n\
+# Make sure you have `curl` installed\n\
+\n\
+######## VARIABLES #########\n\
+abc";
+        let mut matcher = DefaultMatcher::default();
+        assert!(matcher.one_agent_allowed_by_robots(
+            &robots_content,
+            "bot",
             "https://www.test.com/"
         ));
     }
