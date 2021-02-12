@@ -8,5 +8,7 @@
 .DS_Store
 tests/target
 simple_test
-#Added by cargo
+# CMake test directory
+c-build
+# Added by cargo
 Cargo.lock
