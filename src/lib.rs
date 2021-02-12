@@ -330,4 +330,26 @@ mod tests {
             assert_eq!(sitemap_loc, report.sitemap.as_str());
         }
     }
+
+    #[test]
+    fn test_bad_case() {
+        let robots_content = r#"User-agent: *
+Disallow: /*q=
+Disallow: /users/*?
+Disallow: /join/*?
+Disallow: /morelikethis/
+Disallow: /download/
+Disallow: /checkout/
+Disallow: /global/
+Disallow: /api/
+Disallow: /critiques/
+ 
+Sitemap: http://sitemaps.test.net/sitemap-index.xml.gz"#;
+        let mut matcher = DefaultMatcher::default();
+        assert!(matcher.one_agent_allowed_by_robots(
+            &robots_content,
+            "oldnews",
+            "https://www.test.com/"
+        ));
+    }
 }
