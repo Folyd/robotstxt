@@ -1,6 +1,6 @@
 [package]
 name = "robotstxt"
-version = "0.2.0"
+version = "0.3.0"
 description = "A native Rust port of Google's robots.txt parser and matcher C++ library."
 authors = ["Folyd <lyshuhow@gmail.com>"]
 edition = "2018"

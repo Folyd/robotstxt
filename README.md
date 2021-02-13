@@ -16,7 +16,7 @@ A native Rust port of [Google's robots.txt parser and matcher C++ library](https
 
 ```toml
 [dependencies]
-robotstxt = "0.2.0"
+robotstxt = "0.3.0"
 ```
 
 ## Quick start
